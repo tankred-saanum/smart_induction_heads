@@ -1,12 +1,15 @@
 import torch
 from matplotlib import pyplot as plt
+from huggingface_hub import login
+login('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')
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
 import numpy as np
 from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
+import nnsight
+from nnsight import LanguageModel
 from pathlib import Path
-
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -55,26 +58,32 @@ def get_config():
     parser.add_argument('--n_permute', default=4, type=int)
     parser.add_argument('--chunk_size', default=8, type=int)
     parser.add_argument('--threshold', default=0.4, type=float)
+    parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--cmap', default='cividis', type=str)   
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
     args, _ = parser.parse_known_args()
 
     return args
 args = get_config()
+torch.manual_seed(args.seed)
+
 args.iters = args.total_batch_size//args.batch_size
 device='mps'
-model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
-tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
+model = LanguageModel(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
+tokenizer = model.tokenizer
+model.model.norm
 config = PretrainedConfig.from_pretrained(args.model_name)
 vocab_size = config.vocab_size
 n_heads = config.num_attention_heads # number of heads in the models, should get info directly from config
-
+layerwise_logliks = defaultdict(list)
+layerwise_accuracies = defaultdict(list)
 attn_heads = defaultdict(list)
 all_chunk_ids =[]
-accuracies = []
+
+ablate_dict = {2:[3], 8:[3]}
 
 layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
-
+accuracies = []
 for iter in range(args.iters):
     print(iter/args.iters)
     batched_tokens = []
@@ -103,31 +112,38 @@ for iter in range(args.iters):
     chunk_ids = torch.stack(chunk_ids, dim=0)
 
     with torch.no_grad():
-        output = model(batched_tokens, output_attentions=True)
-    
-    all_chunk_ids.append(chunk_ids)
-    for layer in list(layer_dict.keys()):
-        heads = layer_dict[layer]
-        for head in heads:
-            address = f'{layer}-{head}'
-            attn_heads[address].append(output['attentions'][layer][:, head])
-        
-    #for head in heads:
+        with model.trace(batched_tokens, output_attentions=True):
 
+            for layer in range(config.num_hidden_layers):
+                if layer in list(ablate_dict.keys()):
+                    heads = ablate_dict[layer]
         
-    # compute model accuracy
-    logits = output['logits']
-    logits.shape
-    pred = logits.argmax(dim=-1)
-    acc = (pred[:, :-1] == batched_tokens[:, 1:]).float()
-    accuracies.append(acc)
+                    o_proj_in = model.model.layers[layer].self_attn.o_proj.input
+                    o_proj_in = o_proj_in.view(o_proj_in.size(0), o_proj_in.size(1), n_heads, o_proj_in.size(-1)//n_heads)
+                    o_proj_in[:, :, heads] *= 0
+                    o_proj_in = o_proj_in.view(o_proj_in.size(0), o_proj_in.size(1), -1)
+                    model.model.layers[layer].self_attn.o_proj.input = o_proj_in
 
+            output = model.output.save()
+        all_chunk_ids.append(chunk_ids)
+            # compute model accuracy
+        logits = output['logits']
+        logits.shape
+        pred = logits.argmax(dim=-1)
+        acc = (pred[:, :-1] == batched_tokens[:, 1:]).float()
+        accuracies.append(acc)
+        for layer in list(layer_dict.keys()):
+            heads = layer_dict[layer]
+            for head in heads:
+                address = f'{layer}-{head}'
+                attn_heads[address].append(output['attentions'][layer][:, head])
+            
+                
 all_chunk_ids= torch.cat(all_chunk_ids, dim=0)
-accuracies = torch.cat(accuracies, dim=0).cpu().float()
 
-
-save_dir = Path(f'data/learning_scores/{args.model_name.split("/")[-1]}')
+save_dir = Path(f'data/learning_scores_ablated/{args.model_name.split("/")[-1]}')
 save_dir.mkdir(parents=True, exist_ok=True)
+
 for layer in list(layer_dict.keys()):
     heads = layer_dict[layer]
     for head in heads:
@@ -151,14 +167,12 @@ for layer in list(layer_dict.keys()):
 torch.save(accuracies, f'{save_dir}/model_accs.pt')
 
 
-# head=0
-# fig, ax =plt.subplots(1, 1, figsize=(8, 8))
-
 # for layer in list(layer_dict.keys()):
 #     heads = layer_dict[layer]
 #     for head in heads:
 #         address = f'{layer}-{head}'
 #         attn_matrices = torch.cat(attn_heads[address], dim=0)
+#         attn_matrices.shape
 #         pooled = get_chunks(attn_matrices)
 #         pooled.shape
         
@@ -180,41 +194,24 @@ torch.save(accuracies, f'{save_dir}/model_accs.pt')
 # plt.xlabel('Repetition', size=14)
 # plt.ylim([0, 1.1])
 # plt.legend()
-# plt.savefig('figures/icl_heads.png', dpi=200)
+# plt.savefig('figures/icl_heads_ablated2.png', dpi=200)
 # plt.show()
+# if True:
+#     cmap = plt.cm.viridis
+#     colors = [cmap(i / (config.num_hidden_layers - 1)) for i in range(config.num_hidden_layers)]
 
-# fig, ax =plt.subplots(1, 1, figsize=(8, 8))
-# ax.plot(accuracies.mean(dim=0))
-# plt.tick_params(labelsize=12)
-# plt.gca().spines['top'].set_visible(False)
-# plt.gca().spines['right'].set_visible(False)
-# plt.ylabel('Model Accuracy', size=14)
-# plt.xlabel('Repetition', size=14)
-# plt.ylim([0, 1.1])
-# plt.savefig('figures/model_preds.png', dpi=200)
-# plt.show()
+#     layer=config.num_hidden_layers-1
+#     layer_accs = torch.cat(layerwise_accuracies[layer], dim=0)
+#     #print(layer_accs.shape)
+#     layer_accs = layer_accs.mean()
+#     print(layer_accs)
+    #layer_accs = layer_accs.view(-1, args.chunk_size)
+    # plt.plot(layer_accs.mean(dim=0).float().cpu(), color=colors[layer])
+    # plt.tick_params(labelsize=12)
+    # plt.gca().spines['top'].set_visible(False)
+    # plt.gca().spines['right'].set_visible(False)
+    # plt.ylabel('Model accuracy', size=14)
+    # plt.xlabel('Repetition', size=14)
+    # plt.ylim([0, 1.1])
+    # plt.show()
 
-# head=3
-# attn_matrices = torch.cat(attn_heads[head], dim=0)
-# attn_matrices.shape
-# attn_matrices.shape
-# fig, ax =plt.subplots(1, 2, figsize=(8, 8))
-
-# ax[0].imshow(all_chunk_ids[1])
-
-# ax[1].imshow(attn_matrices[1].cpu().float())
-# plt.show()
-# row_ideal
-# row_model
-# # plotting
-# lines = torch.arange(0, num_tokens+1, int(num_tokens/num_total_reps))[1:]
-
-# sublines = torch.arange(0, num_tokens+1, int(num_tokens/(num_total_reps*args.n_reps)))[1:]
-
-# labels = [f'■' for i in range(args.n_permute*args.n_reps)]
-# centers = sublines - (num_tokens/(num_total_reps*args.n_reps))/2
-# #these are the heads we're looking at
-# indices = [0, 3, 4, 5, 6]
-
-# for idx in indices:
-#     plot_head(output['attentions'][14], idx=idx, centers=centers, labels=labels, lines=lines, sublines=sublines)
