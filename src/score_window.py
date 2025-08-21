@@ -24,7 +24,7 @@ def main(
     """
     
     # save data here
-    save_dir = Path("data/induction_scores")
+    save_dir = Path("data/window_scores")
     save_dir.mkdir(parents=True, exist_ok=True)
     
 
@@ -32,7 +32,7 @@ def main(
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map="mps", attn_implementation="eager")
 
     # generate [<bos>, sequence, sequence]
-    token_ids = einops.rearrange(torch.randint(low=1000,high=2000,size=(64,)), "seq_len -> 1 seq_len")
+    token_ids = einops.rearrange(torch.randint(low=1000,high=2000,size=(10,)), "seq_len -> 1 seq_len")
     token_seq = einops.repeat(token_ids, "batch seq_len -> batch (2 seq_len)").to(model.device).squeeze()
     token_seq = torch.concat([torch.Tensor([model.config.bos_token_id]).to(model.device).to(torch.long),token_seq])
 
@@ -46,7 +46,7 @@ def main(
     induction_mask = torch.zeros(seq_len,seq_len).to(float)
 
     for example in range(seq_len//2+1, seq_len): # from +1 because of <bos> token
-        induction_mask[example,example-look_back]=1.
+        induction_mask[example-4:example,example-look_back]=1.
 
     induction_mask = induction_mask[1:,1:] # ignore <bos>
 
