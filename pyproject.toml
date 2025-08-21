@@ -1,0 +1,11 @@
+[project]
+name = "smart_induction_heads"
+requires-python = "==3.12.5"
+version = "0.0.1"
+dependencies = [
+    "transformers[torch]",
+    "seaborn", 
+    "fastcore",
+    "nnsight", 
+    "pandas",
+    ]
