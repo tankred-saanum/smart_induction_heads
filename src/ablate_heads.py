@@ -1,7 +1,5 @@
 import torch
 from matplotlib import pyplot as plt
-from huggingface_hub import login
-login('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')
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
 import numpy as np
 from torch.nn import functional as F
@@ -10,6 +8,7 @@ from collections import defaultdict
 import nnsight
 from nnsight import LanguageModel
 from pathlib import Path
+from collections import OrderedDict
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -17,33 +16,6 @@ def get_chunks(A):
             B[:, i, j] = A[:, i*args.chunk_size:(i+1)*args.chunk_size, j*args.chunk_size:(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
     return B
 
-def plot_head(attn, idx, centers, labels, lines, sublines):
-    attn = attn.cpu().float()
-    fig, ax = plt.subplots(1, 2, figsize=(6,12))
-
-    ax[0].set_title(f'Head {idx+1}', fontsize=14)
-
-
-    for l in sublines:
-        ax[0].axhline(y=l, color='white', linestyle='-', alpha=0.75, linewidth=1)
-        ax[0].axvline(x=l, color='white', linestyle='-', alpha=0.75, linewidth=1)
-
-    ax[0].imshow(attn[0, idx], cmap=args.cmap)
-
-    ax[1].imshow(chunk_id, cmap=args.cmap)
-
-    for l in range(chunk_id.size(0)+1):
-        ax[1].axhline(y=l-0.5, color='white', linestyle='-', alpha=0.75, linewidth=1)
-        ax[1].axvline(x=l-0.5, color='white', linestyle='-', alpha=0.75, linewidth=1)
-
-
-
-    ax[1].set_title('Correct context', fontsize=14)
-    ax[1].axis('off')
-    ax[0].axis('off')
-    plt.savefig(f'figures/shuffled/head_{idx}.png', dpi=300, bbox_inches='tight')
-    plt.tight_layout()
-    plt.show()
 
 
 
@@ -83,6 +55,21 @@ all_chunk_ids =[]
 ablate_dict = {2:[3], 8:[3]}
 
 layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
+sorted_layers = sorted(layer_dict.keys())
+ablate_list = []
+ablate_dict = defaultdict(list)
+for layer in sorted_layers:
+    for val in layer_dict[layer]:
+        ablate_list.append((layer, val))
+        
+ablate_list
+num_ablate=6
+for i in range(num_ablate):
+    layer, head = ablate_list[i]
+    ablate_dict[layer].append(head)
+
+print(ablate_dict)
+ablate_dict = layer_dict
 accuracies = []
 for iter in range(args.iters):
     print(iter/args.iters)
@@ -140,7 +127,7 @@ for iter in range(args.iters):
             
                 
 all_chunk_ids= torch.cat(all_chunk_ids, dim=0)
-
+accuracies = torch.cat(accuracies, dim=0).cpu().float()
 save_dir = Path(f'data/learning_scores_ablated/{args.model_name.split("/")[-1]}')
 save_dir.mkdir(parents=True, exist_ok=True)
 
