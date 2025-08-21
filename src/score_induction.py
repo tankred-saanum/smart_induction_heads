@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import einops
@@ -78,5 +77,4 @@ def main(
             induction_heads[layer] = []
         induction_heads[layer].append(head)
 
-    with open(save_dir / f"{save_name}_{threshold}.json", "w") as f:
-        json.dump(induction_heads, f, indent=4)
+    torch.save(induction_heads, save_dir / f"{save_name}_{threshold}.pt")
