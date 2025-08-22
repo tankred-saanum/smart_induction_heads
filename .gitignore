@@ -1,2 +1,3 @@
 .venv
 uv.lock
+src/smart_induction_heads.egg-info/

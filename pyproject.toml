@@ -11,5 +11,8 @@ dependencies = [
     "fastcore",
     "nnsight", 
     "pandas",
-    "ipykernel"
+    "ipykernel",
+    "natsort",
+    "einops",
+    "scikit-learn"
     ]
