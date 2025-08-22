@@ -6,7 +6,7 @@ from transformers import PretrainedConfig
 
 def get_config():
     parser = ArgumentParser()
-    parser.add_argument('--model_name', default='Qwen/Qwen2.5-0.5B', type=str)
+    parser.add_argument('--model_name', default='Qwen/Qwen2.5-3B', type=str)
     parser.add_argument('--threshold', default=0.4, type=float)   
     parser.add_argument('--cutoff', default=0, type=int)   
     args, _ = parser.parse_known_args()
@@ -34,8 +34,14 @@ for layer in layer_dict:
         accs = accs.mean(dim=0)
         final_acc = accs[-25:].mean()
         scores[layer, head]= final_acc
-        
-scores[scores<0.75]=0.0
+
+scores[scores<0.5]=0.0
 plt.imshow(scores.T)
 plt.colorbar()
+plt.show()
+scores.shape
+accs = scores.topk(5)[0].mean(dim=1)
+accs
+accs.cummax(dim=0)
+plt.plot(accs.cummax(dim=0)[0])
 plt.show()

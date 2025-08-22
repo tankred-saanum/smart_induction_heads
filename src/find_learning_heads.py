@@ -44,7 +44,7 @@ attn_heads = defaultdict(list)
 all_chunk_ids =[]
 accuracies = []
 
-layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
+#layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
 layer_dict = {}
 for layer in range(config.num_hidden_layers):
     layer_dict[layer] = list(range(n_heads))
@@ -103,6 +103,8 @@ accuracies = torch.cat(accuracies, dim=0).cpu().float()
 
 save_dir = Path(f'data/learning_scores/{args.model_name.split("/")[-1]}')
 save_dir.mkdir(parents=True, exist_ok=True)
+learning_scores = torch.zeros(config.num_hidden_layers, config.num_attention_heads)
+induction_layers = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
 for layer in list(layer_dict.keys()):
     heads = layer_dict[layer]
     for head in heads:
@@ -121,8 +123,16 @@ for layer in list(layer_dict.keys()):
             
             head_accs[:, i] = score
             
-        
-        torch.save(head_accs,f'{save_dir}/{address}_accs.pt')
+        learning_score = head_accs.mean(dim=0)[-10:].mean()
+        learning_scores[layer, head] = learning_score
+        is_induction=False
+        if layer in list(induction_layers.keys()):
+            if head in induction_layers[layer]:
+                is_induction=True
+        if learning_score > 0.75 or is_induction:
+            torch.save(head_accs,f'{save_dir}/{address}_accs.pt')
+            
+torch.save(learning_scores, f'{save_dir}/learning_scores.pt')
 torch.save(accuracies, f'{save_dir}/model_accs.pt')
 
 

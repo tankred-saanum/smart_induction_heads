@@ -70,6 +70,11 @@ for i in range(num_ablate):
 
 print(ablate_dict)
 ablate_dict = layer_dict
+ablate_dict[5] = [9, 14]
+ablate_dict[6] = [6]
+ablate_dict[17] = [14, 10]
+#ablate_dict = {5:[0, 1, 2, 3, 4, 5], 17: [0, 1, 2, 3, 4], 6:[0, 1, 2, 3, 4], 7:[0, 1, 2]}
+#ablate_dict = {5:[9, 14], 17:[14, 10], 6:[6], 7:[3]}
 accuracies = []
 for iter in range(args.iters):
     print(iter/args.iters)
