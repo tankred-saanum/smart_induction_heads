@@ -11,21 +11,38 @@ def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
         for j in range(args.n_permute*args.n_reps):
-            B[:, i, j] = A[:, (i*args.chunk_size)+args.chunk_size//2:(i+1)*args.chunk_size, (j*args.chunk_size)+args.chunk_size//2:(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
+            B[:, i, j] = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, (j*args.chunk_size):(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
     return B
-
+# transition_idx = torch.arange(1, 16+1)
+# mask = transition_idx % (16//4) == 0
+# mask[-1] = False
+# mask
+def get_chunks_3rd_order(A):
+    B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
+    for i in range(args.n_permute*args.n_reps):
+        for j in range(args.n_permute*args.n_reps):
+            rows = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, :]
+            transition_idx = torch.arange(1, args.chunk_size+1)
+            mask = transition_idx % (args.chunk_size//args.n_permute_primitive) == 0
+            mask[-1] = False
+            rows = rows[:, mask]
+            patch_score = rows[:, :, (j*args.chunk_size):(j+1)*args.chunk_size]
+            
+            B[:, i, j] = patch_score.reshape(args.total_batch_size, -1).mean(dim=-1)
+            
+    return B
 
 def get_config():
     parser = ArgumentParser()
 
     parser.add_argument('--n_pad_repetitions', default=4, type=int)
-    parser.add_argument('--n_reps', default=10, type=int)
-    parser.add_argument('--batch_size', default=8, type=int)
-    parser.add_argument('--total_batch_size', default=64, type=int)
+    parser.add_argument('--n_reps', default=8, type=int)
+    parser.add_argument('--batch_size', default=4, type=int)
+    parser.add_argument('--total_batch_size', default=32, type=int)
     parser.add_argument('--n_permute', default=4, type=int)
     parser.add_argument('--chunk_size', default=8, type=int)
     parser.add_argument('--markov_order', default=2, type=int)
-    parser.add_argument('--n_permute_primitive', default=2, type=int)
+    parser.add_argument('--n_permute_primitive', default=4, type=int)
     parser.add_argument('--threshold', default=0.4, type=float)
     parser.add_argument('--cmap', default='cividis', type=str)   
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
@@ -87,7 +104,7 @@ for iter in range(args.iters):
         
     # compute model accuracy
     logits = output['logits']
-    logits.shape
+    
     pred = logits.argmax(dim=-1)
     acc = (pred[:, :-1] == batched_tokens[:, 1:]).float()
     accuracies.append(acc)
@@ -109,8 +126,11 @@ for layer in list(layer_dict.keys()):
     for head in heads:
         address = f'{layer}-{head}'
         attn_matrices = torch.cat(attn_heads[address], dim=0)
-        pooled = get_chunks(attn_matrices)
-        pooled.shape
+        if order == 'markov2':
+            pooled = get_chunks(attn_matrices)
+        else:
+            pooled = get_chunks_3rd_order(attn_matrices)
+
         
         head_accs = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps)
         for i in range(1, pooled.size(1)):

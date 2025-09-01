@@ -33,10 +33,10 @@ for i, file in enumerate(files):
     if new_score>score:
         score=new_score
         max_idx=i
-#    ax[0].plot(accs, linewidth=1)
-    avgs.append(accs)
+    ax[0].plot(accs, linewidth=1)
+    # avgs.append(accs)
 
-ax[0].plot(torch.stack(avgs)[max_idx], linewidth=1)
+#ax[0].plot(torch.stack(avgs)[max_idx], linewidth=1)
 ax[0].set_ylim([0., 1.1])
 
 accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)
