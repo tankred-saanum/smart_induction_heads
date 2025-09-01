@@ -6,14 +6,13 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
         for j in range(args.n_permute*args.n_reps):
-            B[:, i, j] = A[:, i*args.chunk_size:(i+1)*args.chunk_size, j*args.chunk_size:(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
+            B[:, i, j] = A[:, (i*args.chunk_size)+args.chunk_size//2:(i+1)*args.chunk_size, (j*args.chunk_size)+args.chunk_size//2:(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
     return B
-
 
 
 def get_config():
@@ -25,14 +24,19 @@ def get_config():
     parser.add_argument('--total_batch_size', default=64, type=int)
     parser.add_argument('--n_permute', default=4, type=int)
     parser.add_argument('--chunk_size', default=8, type=int)
+    parser.add_argument('--markov_order', default=2, type=int)
+    parser.add_argument('--n_permute_primitive', default=2, type=int)
     parser.add_argument('--threshold', default=0.4, type=float)
     parser.add_argument('--cmap', default='cividis', type=str)   
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
     args, _ = parser.parse_known_args()
+    args.iters = args.total_batch_size//args.batch_size
+    if args.markov_order==3:
+        args.chunk_size = args.chunk_size//2
 
     return args
 args = get_config()
-args.iters = args.total_batch_size//args.batch_size
+
 device='mps'
 model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
 tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
@@ -56,23 +60,15 @@ for iter in range(args.iters):
 
     for _ in range(args.batch_size):
         tokens = torch.randint(vocab_size, (args.chunk_size, ))
-
-        perms = []
-        for _ in range(args.n_permute):
-            perm_idx = torch.randperm(args.chunk_size)
-            perms.append(tokens[perm_idx])
-
-        ordered_sequence = torch.arange(args.n_reps*args.n_permute)%args.n_permute
-        permuted_sequence = ordered_sequence[torch.randperm(args.n_reps*args.n_permute)]
-        all_tokens = []
-        for seq_id in permuted_sequence:
-            all_tokens.append(perms[seq_id])
-
-        all_tokens = torch.cat(all_tokens, dim=0)
+        if args.markov_order == 2:
+            all_tokens, chunk_id = second_order_markov_sequence(tokens, args)
+            
+        elif args.markov_order == 3:
+            all_tokens, chunk_id = third_order_markov_sequence(tokens, args)
+            
         batched_tokens.append(all_tokens)
-        # let's get a matrix showing which token chunks are identical (e.g. 0 L0 distance)
-        chunk_id=(torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
         chunk_ids.append(chunk_id)
+
     batched_tokens = torch.stack(batched_tokens, dim=0).to(device)
     chunk_ids = torch.stack(chunk_ids, dim=0)
 
@@ -100,11 +96,14 @@ all_chunk_ids= torch.cat(all_chunk_ids, dim=0)
 
 accuracies = torch.cat(accuracies, dim=0).cpu().float()
 
-
-save_dir = Path(f'data/learning_scores/{args.model_name.split("/")[-1]}')
+order='markov2' if args.markov_order==2 else 'markov3'
+save_dir = Path(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
 save_dir.mkdir(parents=True, exist_ok=True)
 learning_scores = torch.zeros(config.num_hidden_layers, config.num_attention_heads)
 induction_layers = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
+# before we aggregate attention by chunk size, we need to change the chunk size argument if we are in a 3rd order markov process
+# this is because the real chunk size is actually args.chunk_size *args.n_permute_primitive
+args.chunk_size = args.chunk_size * args.n_permute_primitive if args.markov_order == 3 else args.chunk_size
 for layer in list(layer_dict.keys()):
     heads = layer_dict[layer]
     for head in heads:
@@ -129,7 +128,7 @@ for layer in list(layer_dict.keys()):
         if layer in list(induction_layers.keys()):
             if head in induction_layers[layer]:
                 is_induction=True
-        if learning_score > 0.75 or is_induction:
+        if learning_score > 0.4 or is_induction:
             torch.save(head_accs,f'{save_dir}/{address}_accs.pt')
             
 torch.save(learning_scores, f'{save_dir}/learning_scores.pt')

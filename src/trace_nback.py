@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 import torch
 import nnsight
 import numpy as np
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
 
 def get_config():
     parser = ArgumentParser()
@@ -108,14 +109,24 @@ def main():
         batched_tokens = []
         chunk_ids = []
         for _ in range(args.batch_size):
-            tokens = torch.randint(vocab_size, (args.chunk_size,))
-            perms = [tokens[torch.randperm(args.chunk_size)] for _ in range(args.n_permute)]
-            ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
-            permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
-            all_tokens = torch.cat([perms[seq_id] for seq_id in permuted_sequence], dim=0)
+            tokens = torch.randint(vocab_size, (args.chunk_size, ))
+            if args.markov_order == 2:
+                all_tokens, chunk_id = second_order_markov_sequence(tokens, args)
+                
+            elif args.markov_order == 3:
+                all_tokens, chunk_id = third_order_markov_sequence(tokens, args)
+                
             batched_tokens.append(all_tokens)
-            chunk_id = (torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
             chunk_ids.append(chunk_id)
+            
+            # tokens = torch.randint(vocab_size, (args.chunk_size,))
+            # perms = [tokens[torch.randperm(args.chunk_size)] for _ in range(args.n_permute)]
+            # ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
+            # permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
+            # all_tokens = torch.cat([perms[seq_id] for seq_id in permuted_sequence], dim=0)
+            # batched_tokens.append(all_tokens)
+            # chunk_id = (torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
+            # chunk_ids.append(chunk_id)
         all_batched_tokens.append(torch.stack(batched_tokens))
         all_chunk_ids.append(torch.stack(chunk_ids))
 
@@ -155,7 +166,7 @@ def main():
             
             output = model.output.save()
 
-
+    args.chunk_size = args.chunk_size * args.n_permute_primitive if args.markov_order == 3 else args.chunk_size
     # --- Identify Best Heads (if not in 'heads' mode) ---
     best_heads = {}
     best_head_accs = {}
