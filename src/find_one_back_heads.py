@@ -1,0 +1,220 @@
+import torch
+from matplotlib import pyplot as plt
+from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
+import numpy as np
+from torch.nn import functional as F
+from argparse import ArgumentParser
+from collections import defaultdict
+from pathlib import Path
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
+def get_chunks(A):
+    B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
+    for i in range(args.n_permute*args.n_reps):
+        for j in range(args.n_permute*args.n_reps):
+            B[:, i, j] = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, (j*args.chunk_size):(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
+    return B
+# transition_idx = torch.arange(1, 16+1)
+# mask = transition_idx % (16//4) == 0
+# mask[-1] = False
+# mask
+def get_chunks_3rd_order(A):
+    B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
+    for i in range(args.n_permute*args.n_reps):
+        for j in range(args.n_permute*args.n_reps):
+            rows = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, :]
+            transition_idx = torch.arange(1, args.chunk_size+1)
+            mask = transition_idx % (args.chunk_size//args.n_permute_primitive) == 0
+            mask[-1] = False
+            rows = rows[:, mask]
+            patch_score = rows[:, :, (j*args.chunk_size):(j+1)*args.chunk_size]
+            
+            B[:, i, j] = patch_score.reshape(args.total_batch_size, -1).mean(dim=-1)
+            
+    return B
+
+def get_config():
+    parser = ArgumentParser()
+
+    parser.add_argument('--n_reps', default=8, type=int)
+    parser.add_argument('--batch_size', default=4, type=int)
+    parser.add_argument('--total_batch_size', default=32, type=int)
+    parser.add_argument('--n_permute', default=4, type=int)
+    parser.add_argument('--chunk_size', default=8, type=int)
+    parser.add_argument('--markov_order', default=2, type=int)
+    parser.add_argument('--n_back', default=1, type=int)
+    parser.add_argument('--n_permute_primitive', default=4, type=int)
+    parser.add_argument('--threshold', default=0.85, type=float)
+    parser.add_argument('--cmap', default='cividis', type=str)   
+    parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
+    args, _ = parser.parse_known_args()
+    args.iters = args.total_batch_size//args.batch_size
+    if args.markov_order==3:
+        args.chunk_size = args.chunk_size//2
+
+    return args
+args = get_config()
+
+device='mps'
+model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
+tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
+config = PretrainedConfig.from_pretrained(args.model_name)
+vocab_size = config.vocab_size
+n_heads = config.num_attention_heads # number of heads in the models, should get info directly from config
+
+attn_heads = defaultdict(list)
+all_chunk_ids =[]
+accuracies = []
+
+#layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
+layer_dict = {}
+for layer in range(config.num_hidden_layers):
+    layer_dict[layer] = list(range(n_heads))
+
+for iter in range(args.iters):
+    print(iter/args.iters)
+    batched_tokens = []
+    chunk_ids = []
+
+    for _ in range(args.batch_size):
+        tokens = torch.randint(vocab_size, (args.chunk_size, ))
+        if args.markov_order == 2:
+            all_tokens, chunk_id = second_order_markov_sequence(tokens, args)
+            
+        elif args.markov_order == 3:
+            all_tokens, chunk_id = third_order_markov_sequence(tokens, args)
+            
+        batched_tokens.append(all_tokens)
+        chunk_ids.append(chunk_id)
+
+    batched_tokens = torch.stack(batched_tokens, dim=0).to(device)
+    chunk_ids = torch.stack(chunk_ids, dim=0)
+
+    with torch.no_grad():
+        output = model(batched_tokens, output_attentions=True)
+    
+    all_chunk_ids.append(chunk_ids)
+    for layer in list(layer_dict.keys()):
+        heads = layer_dict[layer]
+        for head in heads:
+            address = f'{layer}-{head}'
+            attn_heads[address].append(output['attentions'][layer][:, head])
+        
+    #for head in heads:
+
+        
+    # compute model accuracy
+    logits = output['logits']
+    
+    pred = logits.argmax(dim=-1)
+    acc = (pred[:, :-1] == batched_tokens[:, 1:]).float()
+    accuracies.append(acc)
+
+all_chunk_ids= torch.cat(all_chunk_ids, dim=0)
+
+accuracies = torch.cat(accuracies, dim=0).cpu().float()
+
+order='markov2' if args.markov_order==2 else 'markov3'
+save_dir = Path(f'data/one_back_scores/{order}/{args.model_name.split("/")[-1]}')
+save_dir.mkdir(parents=True, exist_ok=True)
+one_back_scores = torch.zeros(config.num_hidden_layers, config.num_attention_heads)
+# before we aggregate attention by chunk size, we need to change the chunk size argument if we are in a 3rd order markov process
+# this is because the real chunk size is actually args.chunk_size *args.n_permute_primitive
+args.chunk_size = args.chunk_size * args.n_permute_primitive if args.markov_order == 3 else args.chunk_size
+for layer in list(layer_dict.keys()):
+    heads = layer_dict[layer]
+    for head in heads:
+        address = f'{layer}-{head}'
+        attn_matrices = torch.cat(attn_heads[address], dim=0)
+        if order == 'markov2':
+            pooled = get_chunks(attn_matrices)
+        else:
+            pooled = get_chunks_3rd_order(attn_matrices)
+
+        
+        head_accs = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps)
+        for i in range(1, pooled.size(1)):
+            row_ideal = all_chunk_ids[:, i, :i]
+            row_model = pooled[:, i, :i]
+            most_attn_idx = row_model.argmax(dim=1)
+            score = (most_attn_idx == (i-args.n_back)).float()
+            #score = 1.0 if most_attn_idx == (i-args.n_back) else 0
+            #print(score.shape, 'score!')
+            
+            head_accs[:, i] = score
+            
+        one_back_score = head_accs.mean(dim=0)[-10:].mean()
+        one_back_scores[layer, head] = one_back_score
+        if one_back_score > args.threshold:
+            torch.save(head_accs,f'{save_dir}/{address}_accs.pt')
+            
+torch.save(one_back_scores, f'{save_dir}/one_back_scores.pt')
+torch.save(accuracies, f'{save_dir}/model_accs.pt')
+torch.save(args, f'{save_dir}/args.pt')
+
+# head=0
+# fig, ax =plt.subplots(1, 1, figsize=(8, 8))
+
+# for layer in list(layer_dict.keys()):
+#     heads = layer_dict[layer]
+#     for head in heads:
+#         address = f'{layer}-{head}'
+#         attn_matrices = torch.cat(attn_heads[address], dim=0)
+#         pooled = get_chunks(attn_matrices)
+#         pooled.shape
+        
+#         errors = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps)
+#         for i in range(1, pooled.size(1)):
+#             row_ideal = all_chunk_ids[:, i, :i]
+#             row_model = pooled[:, i, :i]
+#             most_attn_idx = row_model.argmax(dim=1)
+#             score = row_ideal[torch.arange(args.total_batch_size), most_attn_idx]
+#             #print(score.shape, 'score!')
+            
+#             errors[:, i] = score
+            
+#         ax.plot(errors.mean(dim=0), linewidth=3, label=f'LH: {address}')
+# plt.tick_params(labelsize=12)
+# plt.gca().spines['top'].set_visible(False)
+# plt.gca().spines['right'].set_visible(False)
+# plt.ylabel('Attn Accuracy', size=14)
+# plt.xlabel('Repetition', size=14)
+# plt.ylim([0, 1.1])
+# plt.legend()
+# plt.savefig('figures/icl_heads.png', dpi=200)
+# plt.show()
+
+# fig, ax =plt.subplots(1, 1, figsize=(8, 8))
+# ax.plot(accuracies.mean(dim=0))
+# plt.tick_params(labelsize=12)
+# plt.gca().spines['top'].set_visible(False)
+# plt.gca().spines['right'].set_visible(False)
+# plt.ylabel('Model Accuracy', size=14)
+# plt.xlabel('Repetition', size=14)
+# plt.ylim([0, 1.1])
+# plt.savefig('figures/model_preds.png', dpi=200)
+# plt.show()
+
+# head=3
+# attn_matrices = torch.cat(attn_heads[head], dim=0)
+# attn_matrices.shape
+# attn_matrices.shape
+# fig, ax =plt.subplots(1, 2, figsize=(8, 8))
+
+# ax[0].imshow(all_chunk_ids[1])
+
+# ax[1].imshow(attn_matrices[1].cpu().float())
+# plt.show()
+# row_ideal
+# row_model
+# # plotting
+# lines = torch.arange(0, num_tokens+1, int(num_tokens/num_total_reps))[1:]
+
+# sublines = torch.arange(0, num_tokens+1, int(num_tokens/(num_total_reps*args.n_reps)))[1:]
+
+# labels = [f'■' for i in range(args.n_permute*args.n_reps)]
+# centers = sublines - (num_tokens/(num_total_reps*args.n_reps))/2
+# #these are the heads we're looking at
+# indices = [0, 3, 4, 5, 6]
+
+# for idx in indices:
+#     plot_head(output['attentions'][14], idx=idx, centers=centers, labels=labels, lines=lines, sublines=sublines)

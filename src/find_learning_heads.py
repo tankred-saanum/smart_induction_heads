@@ -35,7 +35,6 @@ def get_chunks_3rd_order(A):
 def get_config():
     parser = ArgumentParser()
 
-    parser.add_argument('--n_pad_repetitions', default=4, type=int)
     parser.add_argument('--n_reps', default=8, type=int)
     parser.add_argument('--batch_size', default=4, type=int)
     parser.add_argument('--total_batch_size', default=32, type=int)
@@ -148,12 +147,12 @@ for layer in list(layer_dict.keys()):
         if layer in list(induction_layers.keys()):
             if head in induction_layers[layer]:
                 is_induction=True
-        if learning_score > 0.4 or is_induction:
+        if learning_score > args.threshold or is_induction:
             torch.save(head_accs,f'{save_dir}/{address}_accs.pt')
             
 torch.save(learning_scores, f'{save_dir}/learning_scores.pt')
 torch.save(accuracies, f'{save_dir}/model_accs.pt')
-
+torch.save(args, f'{save_dir}/args.pt')
 
 # head=0
 # fig, ax =plt.subplots(1, 1, figsize=(8, 8))

@@ -18,16 +18,18 @@ from utils import first_order_markov_sequence, second_order_markov_sequence, thi
 def get_config():
     parser = ArgumentParser()
     parser.add_argument('--n_reps', default=10, type=int)
-    parser.add_argument('--nback', default=10, type=int)
+    parser.add_argument('--nback', default=1, type=int)
     parser.add_argument('--batch_size', default=8, type=int)
-    parser.add_argument('--total_batch_size', default=32, type=int)
+    parser.add_argument('--total_batch_size', default=8, type=int)
     parser.add_argument('--n_permute', default=4, type=int)
+    parser.add_argument('--n_permute_primitive', default=4, type=int)
     parser.add_argument('--chunk_size', default=8, type=int)
     parser.add_argument('--threshold', default=0.4, type=float)
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-0.5B', type=str)
     parser.add_argument('--seed', default=42, type=int)
+    parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--test_size', default=0.25, type=float)
-    parser.add_argument('--module', default='mlp', type=str, choices=['heads', 'mlp', 'attn', 'residual'])
+    parser.add_argument('--module', default='residual', type=str, choices=['heads', 'mlp', 'attn', 'residual'])
     args, _ = parser.parse_known_args()
     args.iters = args.total_batch_size // args.batch_size
     return args
@@ -119,14 +121,7 @@ def main():
             batched_tokens.append(all_tokens)
             chunk_ids.append(chunk_id)
             
-            # tokens = torch.randint(vocab_size, (args.chunk_size,))
-            # perms = [tokens[torch.randperm(args.chunk_size)] for _ in range(args.n_permute)]
-            # ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
-            # permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
-            # all_tokens = torch.cat([perms[seq_id] for seq_id in permuted_sequence], dim=0)
-            # batched_tokens.append(all_tokens)
-            # chunk_id = (torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
-            # chunk_ids.append(chunk_id)
+
         all_batched_tokens.append(torch.stack(batched_tokens))
         all_chunk_ids.append(torch.stack(chunk_ids))
 
