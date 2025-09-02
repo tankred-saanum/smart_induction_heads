@@ -13,10 +13,7 @@ def get_chunks(A):
         for j in range(args.n_permute*args.n_reps):
             B[:, i, j] = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, (j*args.chunk_size):(j+1)*args.chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
     return B
-# transition_idx = torch.arange(1, 16+1)
-# mask = transition_idx % (16//4) == 0
-# mask[-1] = False
-# mask
+
 def get_chunks_3rd_order(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -64,7 +61,6 @@ attn_heads = defaultdict(list)
 all_chunk_ids =[]
 accuracies = []
 
-#layer_dict = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
 layer_dict = {}
 for layer in range(config.num_hidden_layers):
     layer_dict[layer] = list(range(n_heads))
