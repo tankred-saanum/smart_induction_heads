@@ -1,4 +1,14 @@
 import torch
+from collections import defaultdict
+
+def create_LH_dict(heads_arr, threshold):
+    # heads is L x H
+    layer_dict = defaultdict(list)
+    for layer in range(heads_arr.size(0)):
+        for head in range(heads_arr.size(1)):
+            if heads_arr[layer, head] > threshold:
+                layer_dict[layer].append(head)
+    return layer_dict
 
 def first_order_markov_sequence(tokens, args):
     seq = tokens[torch.randperm(args.chunk_size)]

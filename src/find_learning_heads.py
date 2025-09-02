@@ -39,6 +39,7 @@ def get_config():
     parser.add_argument('--chunk_size', default=8, type=int)
     parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--n_permute_primitive', default=4, type=int)
+    parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--threshold', default=0.4, type=float) 
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
     args, _ = parser.parse_known_args()
@@ -48,7 +49,8 @@ def get_config():
 
     return args
 args = get_config()
-
+torch.manual_seed(args.seed)
+np.random.seed(args.seed)
 device='mps'
 model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
 tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")

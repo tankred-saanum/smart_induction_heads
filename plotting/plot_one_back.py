@@ -14,17 +14,17 @@ def get_config():
     return args
 
 args = get_config()
-f, ax = plt.subplots(1, 2, figsize=(10, 6))
-markov_orders = [2, 3]
-for i, order in enumerate(markov_orders):
-    exp_args = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
-    decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
-    ax[i].imshow(decoding_accs.T)
+# f, ax = plt.subplots(1, 2, figsize=(10, 6))
+# markov_orders = [2, 3]
+# for i, order in enumerate(markov_orders):
+#     exp_args = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
+#     decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+#     ax[i].imshow(decoding_accs.T)
 
-cbar = f.colorbar(im1, ax=[ax1, ax2], shrink=0.8, aspect=20)
-cbar.set_label('Value')
+# cbar = f.colorbar(im1, ax=[ax1, ax2], shrink=0.8, aspect=20)
+# cbar.set_label('Value')
 
-plt.show()
+# plt.show()
 def plot_max_learning_scores():
     models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
     fig, ax = plt.subplots(1, len(models), figsize=(12, 6), sharey=True)
@@ -56,3 +56,9 @@ def plot_max_learning_scores():
     plt.savefig('figures/max_1back.png', bbox_inches='tight')
     fig.show()
 plot_max_learning_scores()
+
+# args.model_name
+# order='3'
+# args.module='heads'
+# decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+# decoding_accs[15, 7]

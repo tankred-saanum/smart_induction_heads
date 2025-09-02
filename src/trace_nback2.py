@@ -13,14 +13,14 @@ from sklearn.preprocessing import StandardScaler
 import torch
 import nnsight
 import numpy as np
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
 
 def get_config():
     parser = ArgumentParser()
-    parser.add_argument('--n_reps', default=10, type=int)
-    parser.add_argument('--nback', default=2, type=int)
+    parser.add_argument('--n_reps', default=8, type=int)
+    parser.add_argument('--nback', default=1, type=int)
     parser.add_argument('--batch_size', default=8, type=int)
-    parser.add_argument('--total_batch_size', default=64, type=int)
+    parser.add_argument('--total_batch_size', default=256, type=int)
     parser.add_argument('--n_permute', default=4, type=int)
     parser.add_argument('--n_permute_primitive', default=4, type=int)
     parser.add_argument('--chunk_size', default=8, type=int)
@@ -32,6 +32,8 @@ def get_config():
     parser.add_argument('--module', default='residual', type=str, choices=['heads', 'mlp', 'attn', 'residual'])
     args, _ = parser.parse_known_args()
     args.iters = args.total_batch_size // args.batch_size
+    if args.markov_order==3:
+        args.chunk_size = args.chunk_size//2
     return args
 
 def get_chunks(A, args):
@@ -94,10 +96,10 @@ def main():
         for _ in range(args.batch_size):
             tokens = torch.randint(vocab_size, (args.chunk_size, ))
             if args.markov_order == 2:
-                all_tokens, chunk_id = second_order_markov_sequence(tokens, args)
+                all_tokens, chunk_id = unique_second_order_markov_sequence(tokens, args)
                 
             elif args.markov_order == 3:
-                all_tokens, chunk_id = third_order_markov_sequence(tokens, args)
+                all_tokens, chunk_id = unique_third_order_markov_sequence(tokens, args)
                 
             batched_tokens.append(all_tokens)
             chunk_ids.append(chunk_id)
