@@ -6,7 +6,7 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -39,8 +39,7 @@ def get_config():
     parser.add_argument('--chunk_size', default=8, type=int)
     parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--n_permute_primitive', default=4, type=int)
-    parser.add_argument('--threshold', default=0.4, type=float)
-    parser.add_argument('--cmap', default='cividis', type=str)   
+    parser.add_argument('--threshold', default=0.4, type=float) 
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
     args, _ = parser.parse_known_args()
     args.iters = args.total_batch_size//args.batch_size
@@ -73,10 +72,10 @@ for iter in range(args.iters):
     for _ in range(args.batch_size):
         tokens = torch.randint(vocab_size, (args.chunk_size, ))
         if args.markov_order == 2:
-            all_tokens, chunk_id = second_order_markov_sequence(tokens, args)
+            all_tokens, chunk_id = unique_second_order_markov_sequence(tokens, args)
             
         elif args.markov_order == 3:
-            all_tokens, chunk_id = third_order_markov_sequence(tokens, args)
+            all_tokens, chunk_id = unique_third_order_markov_sequence(tokens, args)
             
         batched_tokens.append(all_tokens)
         chunk_ids.append(chunk_id)

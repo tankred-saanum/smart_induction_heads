@@ -16,11 +16,12 @@ def get_config():
 
 args = get_config()
 
-fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
 models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
+models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
 order='markov2' if args.markov_order==2 else 'markov3'
-exceptions = ['learning_scores.pt', 'model_accs.pt']
+exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
 for model_name in models:
     files = os.listdir(f'data/learning_scores/{order}/{model_name.split("/")[-1]}')
     exp_args = torch.load(f'data/learning_scores/{order}/{model_name.split("/")[-1]}/args.pt', weights_only=False)
@@ -47,19 +48,20 @@ plt.show()
 # avgs = []
 # score=0
 # max_idx = 0
-# for i, file in enumerate(files):
-#     if file in exceptions:
-#         continue
+files = os.listdir(f'data/learning_scores/{order}/{model_name.split("/")[-1]}')
+for i, file in enumerate(files):
+    if file in exceptions:
+        continue
 
-#     accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
-#     accs = accs.mean(dim=0)
-#     new_score = accs[-10:].mean()
-#     if new_score>score:
-#         score=new_score
-#         max_idx=i
-# #    ax[0].plot(accs, linewidth=1)
-#     avgs.append(accs)
-
+    accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
+    accs = accs.mean(dim=0)
+    new_score = accs[-10:].mean()
+    # if new_score>score:
+    #     score=new_score
+    #     max_idx=i
+    plt.plot(accs, linewidth=1)
+    #avgs.append(accs)
+plt.show()
 # ax[0].plot(torch.stack(avgs)[max_idx], linewidth=1)
 # ax[0].set_ylim([0., 1.1])
 
