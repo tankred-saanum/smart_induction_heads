@@ -1,4 +1,3 @@
-import argparse
 from dataclasses import dataclass
 
 from fastcore.script import call_parse
@@ -25,7 +24,9 @@ def main(
     n_reps:int=4, 
     n_permute:int=4, 
     n_permute_primitive:int=4, 
-    order:int=5
+    order:int=5,
+    markov_order: int = 5,
+    repeats: int = 5,
 ):
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16).eval()
     args = Args(
@@ -33,11 +34,13 @@ def main(
         n_reps=n_reps, 
         n_permute=n_permute, 
         n_permute_primitive=n_permute_primitive,
-        markov_order=order
+        markov_order=order,
+        repeats=repeats,
+        markov_order=markov_order,
     )
 
     all_accs = []
-    for repeat in tqdm(range(repeats)):
+    for repeat in tqdm(range(args.repeats)):
         tokens = torch.randint(model.config.vocab_size, size=(args.chunk_size,))
 
         if args.markov_order == 2:
