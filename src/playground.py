@@ -62,6 +62,7 @@ def main(
         logits = model(seq).logits
         pred = logits.argmax(dim=-1)
         accs = (pred[:, :-1] == seq[:, 1:]).float()
+        accs = torch.cat([accs, torch.ones(accs.size(0), 1)], dim=-1)
 
         if args.markov_order == 2:
             accs = accs.view(accs.size(0), -1, args.chunk_size)
