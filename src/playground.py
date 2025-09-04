@@ -36,7 +36,6 @@ def main(
         n_permute_primitive=n_permute_primitive,
         markov_order=order,
         repeats=repeats,
-        markov_order=markov_order,
     )
 
     all_accs = []
