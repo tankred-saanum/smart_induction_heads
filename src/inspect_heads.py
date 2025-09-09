@@ -93,16 +93,22 @@ for iter in range(args.iters):
             address = f'{layer}-{head}'
             attn_heads[address].append(output['attentions'][layer][:, head])
 
+args.module='heads'
+decoding_accs = torch.load(f'data/one_back_scores/markov{args.markov_order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+from src.utils import create_LH_dict
+ldict = create_LH_dict(decoding_accs, threshold=0.90)
+
 if True:
-    attn = attn_heads['15-7'][0][0].cpu().float()
-    pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-    f, ax = plt.subplots(1, 3, figsize=(10, 8))
-    ax[0].imshow(pooled)
-    ax[1].imshow(all_chunk_ids[0][0])
-    ax[2].imshow(attn)
-    plt.show()
-    for i in range(pooled.size(0)):
-        row = pooled[i, :i]
-        print(i, row, pooled[i])
+    for l in ldict.keys():
+        for h in ldict[l]:
+            attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
+            pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
+            f, ax = plt.subplots(1, 2, figsize=(10, 8))
+            f.suptitle(f'layer {l} - head {h}')
+            ax[0].imshow(pooled)
+            #ax[1].imshow(all_chunk_ids[0][0])
+            ax[1].imshow(attn)
+            plt.show()
+
     
 pooled.shape

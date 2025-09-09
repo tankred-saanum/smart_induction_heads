@@ -8,6 +8,7 @@ import matplotlib
 def get_config():
     parser = ArgumentParser()
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
+    parser.add_argument('--aggregate', default='mean', type=str)
     parser.add_argument('--threshold', default=0.4, type=float)   
     parser.add_argument('--cutoff', default=0, type=int)
     parser.add_argument('--markov_order', default=2, type=int)   
@@ -17,14 +18,16 @@ def get_config():
 
 
 args = get_config()
-
-fig, ax = plt.subplots(2, 2, figsize=(6, 6), sharey=True, sharex=True)
+markov_orders= [2, 3]
 
 models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
 
+fig, ax = plt.subplots(2, len(models), figsize=(6, 6), sharey=True, sharex=True)
+
+
 
 exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
-markov_orders= [2, 3]
+
 for i, order in enumerate(markov_orders):
     order='markov2' if order==2 else 'markov3'
     for model_name in models:
@@ -45,8 +48,9 @@ for i, order in enumerate(markov_orders):
             mask[-1] = False
             accs = accs[:, mask]
             accs = accs.mean(dim=1)
-        ax[0, i].plot(accs*100, label=model_name)
-        ax[0, i].set_ylim([0., 100])
+        ax[i, 0].plot(accs*100, label=model_name)
+        ax[i, 0].set_ylim([0., 100])
+ax[0, 0].set_title('LM Head')
 #ax[0, 0].set_ylabel('Accuracy %')
         
         
@@ -72,9 +76,60 @@ for i, order in enumerate(markov_orders):
                 accs = torch.load(f'data/learning_scores/{order}/{model_name.split("/")[-1]}/{file}', weights_only=False)
                 accs = accs.mean(dim=0)
                 aggregate.append(accs)
-        accs = torch.stack(aggregate, dim=0).mean(dim=0)
-        ax[1, i].plot(accs*100, label=model_str)
+        accs = torch.stack(aggregate, dim=0)
+        if args.aggregate == 'mean':
+            accs = accs.mean(dim=0)
+        elif args.aggregate == 'max':
+            max_idx = accs.mean(dim=-1).argmax()
+            accs = accs[max_idx]
+        elif args.aggregate == 'topk':
+            _, max_idx = accs.mean(dim=-1).topk(5)
+            accs = accs[max_idx].mean(dim=0)
+        ax[i, 1].plot(accs*100, label=model_str)
 #ax[1, 0].set_ylabel('Accuracy %')
+ax[0, 1].set_title('Induction Heads')
+
+
+
+
+
+exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
+for i, order in enumerate(markov_orders):
+    order='markov2' if order==2 else 'markov3'
+    for model_name in models:
+        model_str= model_name.split("/")[-1]
+        learning_scores = torch.load(f'data/learning_scores/{order}/{model_str}/learning_scores.pt')
+        induction_scores = torch.load(f'data/induction_scores/{model_name.split("/")[-1]}.pt')
+        files = os.listdir(f'data/learning_scores/{order}/{model_name.split("/")[-1]}')
+        aggregate = []
+        for _, file in enumerate(files):
+            if file in exceptions:
+                continue
+            head_address = file.split('_')[0]
+            layer, head = head_address.split('-')
+            learning_score = learning_scores[int(layer), int(head)]
+            
+            induction_score = induction_scores[int(layer), int(head)]
+            if learning_score > 0.4 and induction_score < 0.4:
+            
+                accs = torch.load(f'data/learning_scores/{order}/{model_name.split("/")[-1]}/{file}', weights_only=False)
+                accs = accs.mean(dim=0)
+                aggregate.append(accs)
+        accs = torch.stack(aggregate, dim=0)
+        if args.aggregate == 'mean':
+            accs = accs.mean(dim=0)
+        elif args.aggregate == 'max':
+            max_idx = accs.mean(dim=-1).argmax()
+            accs = accs[max_idx]
+        elif args.aggregate == 'topk':
+            _, max_idx = accs.mean(dim=-1).topk(5)
+            accs = accs[max_idx].mean(dim=0)
+        ax[i, 2].plot(accs*100, label=model_str)
+#ax[1, 0].set_ylabel('Accuracy %')
+ax[0, 2].set_title('Context\nMatching Heads')
+
+
+
 h, l = ax[1, -1].get_legend_handles_labels()
 fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
 fig.supxlabel('Repetitions')

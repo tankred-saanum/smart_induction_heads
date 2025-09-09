@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from matplotlib import pyplot as plt
 def get_config():
     parser = ArgumentParser()
-    parser.add_argument('--model_name', default='Qwen/Qwen2.5-0.5B', type=str)
+    parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
     parser.add_argument('--module', default='heads', type=str)
     
     parser.add_argument('--threshold', default=0.4, type=float)   
@@ -12,8 +12,18 @@ def get_config():
     args, _ = parser.parse_known_args()
 
     return args
+args= get_config()
+args.module='heads'
+if True:
+    args = get_config()
+    args.module='heads'
+    order=2
+    exp_args = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
+    decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+    decoding_accs[decoding_accs<0.9] = 0
+    plt.imshow(decoding_accs.T)
+    plt.show()
 
-args = get_config()
 # f, ax = plt.subplots(1, 2, figsize=(10, 6))
 # markov_orders = [2, 3]
 # for i, order in enumerate(markov_orders):
@@ -38,20 +48,19 @@ def plot_max_learning_scores():
         for j, order in enumerate(markov_orders):
             exp_args = torch.load(f'data/one_back_scores/markov{order}/{model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
             decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
-            scores = decoding_accs.max(dim=-1)[0]
-            ax[i].plot(scores, color=colors[j], linewidth=lwd, label=f'Order {order}')
-            ax[i].set_ylim([0.4, 1.])
+            scores = decoding_accs.max(dim=-1)[0]*100
+            ax[i].plot(scores, color=colors[j], label=f'Order {order}')
+            ax[i].set_ylim([45, 100.])
             
-            ax[i].spines['top'].set_visible(False)
-            ax[i].spines['right'].set_visible(False)
-            ax[i].spines['left'].set_linewidth(spn_lwd)
-            ax[i].spines['bottom'].set_linewidth(spn_lwd)
-            ax[i].tick_params(labelsize=14, size=8, width=1)
-            ax[i].set_title(model_str, fontsize=lbl_size)
-    ax[0].set_ylabel('1-Back Accuracy', size=lbl_size)
-    fig.supxlabel('Layer', size=lbl_size)
+            # ax[i].spines['top'].set_visible(False)
+            # ax[i].spines['right'].set_visible(False)
+            # ax[i].spines['left'].set_linewidth(spn_lwd)
+            # ax[i].spines['bottom'].set_linewidth(spn_lwd)
+            ax[i].set_title(model_str)
+    ax[0].set_ylabel('1-Back Accuracy')
+    fig.supxlabel('Layer')
     h, l = ax[-1].get_legend_handles_labels()
-    fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01), fontsize=lbl_size)
+    fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01))
     #fig.tight_layout()
     plt.savefig('figures/max_1back.png', bbox_inches='tight')
     fig.show()

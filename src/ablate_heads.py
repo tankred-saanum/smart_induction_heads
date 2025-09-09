@@ -81,12 +81,12 @@ if args.ablation_style == 'induction':
     score_arr = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
 
 elif args.ablation_style == 'learning':
-    args.threshold=0.4
+    args.threshold=0.4 # fix these for simplicity
     score_arr = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/learning_scores.pt')
 
 elif args.ablation_style == 'one_back':
-    args.threshold = 0.7
-    score_arr =  torch.load(f'data/one_back_scores/{order}/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
+    # always load markov 2 decodability to make analyses comparable
+    score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
     
 
 score_dict = create_LH_dict(score_arr, threshold=args.threshold)
