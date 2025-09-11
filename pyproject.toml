@@ -14,5 +14,9 @@ dependencies = [
     "ipykernel",
     "natsort",
     "einops",
+    "flash-attn ; sys_platform == 'linux'",
     "scikit-learn"
     ]
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
