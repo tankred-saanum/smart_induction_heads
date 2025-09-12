@@ -133,7 +133,7 @@ ax[0, 2].set_title('Generic\n ICL heads')
 h, l = ax[1, -1].get_legend_handles_labels()
 fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
 fig.supxlabel('Repetitions')
-fig.supylabel('Accuracy %')
+fig.supylabel('Accuracy %', x=0.00)
 plt.savefig('figures/learning.png', bbox_inches='tight')
 plt.show()
 

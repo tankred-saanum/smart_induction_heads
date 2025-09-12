@@ -16,20 +16,20 @@ args = get_config()
 
 
 
-learning_scores2 = torch.load(f'data/learning_scores/markov2/{args.model_name.split("/")[-1]}/learning_scores.pt')
-learning_scores3 = torch.load(f'data/learning_scores/markov3/{args.model_name.split("/")[-1]}/learning_scores.pt')
-learning_scores2[learning_scores2<0.4] = 0
-induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
-induction_scores[induction_scores < 0.4] = 0
-composite = torch.logical_and(learning_scores2 > 0.4, induction_scores > 0.4) * learning_scores2
-fig, ax = plt.subplots(1, 3)
+# learning_scores2 = torch.load(f'data/learning_scores/markov2/{args.model_name.split("/")[-1]}/learning_scores.pt')
+# learning_scores3 = torch.load(f'data/learning_scores/markov3/{args.model_name.split("/")[-1]}/learning_scores.pt')
+# learning_scores2[learning_scores2<0.4] = 0
+# induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
+# induction_scores[induction_scores < 0.4] = 0
+# composite = torch.logical_and(learning_scores2 > 0.4, induction_scores > 0.4) * learning_scores2
+# fig, ax = plt.subplots(1, 3)
 
-ax[0].imshow(composite.T)
-#ax[0].imshow(learning_scores2.T)
-ax[1].imshow(learning_scores3.T)
-composite = torch.logical_and(learning_scores3 > 0.7, learning_scores2 > 0.7)
-ax[2].imshow(composite.T)
-plt.show()
+# ax[0].imshow(composite.T)
+# #ax[0].imshow(learning_scores2.T)
+# ax[1].imshow(learning_scores3.T)
+# composite = torch.logical_and(learning_scores3 > 0.7, learning_scores2 > 0.7)
+# ax[2].imshow(composite.T)
+# plt.show()
 
 
 fig, ax = plt.subplots(3, 1, sharex=True)
