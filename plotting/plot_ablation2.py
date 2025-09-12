@@ -219,7 +219,7 @@ for i, order in enumerate(markov_orders):
     
     
 #ax[1, 0].set_ylabel('Accuracy %')
-ax[0, 2].set_title('Context\nMatching Heads')
+ax[0, 2].set_title('Generic ICL\nHeads')
 
 
 

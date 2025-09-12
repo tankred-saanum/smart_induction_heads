@@ -1,6 +1,6 @@
 import torch
 from collections import defaultdict
-
+import random
 def create_LH_dict(heads_arr, threshold):
     # heads is L x H
     layer_dict = defaultdict(list)
@@ -9,6 +9,51 @@ def create_LH_dict(heads_arr, threshold):
             if heads_arr[layer, head] > threshold:
                 layer_dict[layer].append(head)
     return layer_dict
+
+
+def get_best_and_worst(heads_arr, induction_scores, threshold):
+    # heads is L x H
+    best_score = 0.0
+    worst_score = 1.0
+    layer_dict = defaultdict(list)
+    for layer in range(heads_arr.size(0)):
+        for head in range(heads_arr.size(1)):
+            score = heads_arr[layer, head]
+            induction_score = induction_scores[layer, head]
+            if score > threshold and induction_score > threshold:
+                if score > best_score:
+                    best_score = score
+                    best_address = (layer, head)
+                if score < worst_score:
+                    worst_score = score
+                    worst_address = (layer, head)
+                
+    return best_address, worst_address
+
+def create_random_dict(heads_arr, threshold, pool_threshold):
+    # heads is L x H
+    above = heads_arr > threshold
+    below = heads_arr < threshold
+
+    layer_dict = defaultdict(list)
+    rand_idx = torch.randperm(heads_arr.size(0)* heads_arr.size(1))
+    coords = torch.unravel_index(rand_idx, heads_arr.shape)
+    num_heads = 0
+    target_heads = above.float().sum().int()
+    
+    for idx in rand_idx:
+        coord_x, coord_y = coords[0][idx].item(), coords[1][idx].item()
+        
+        if heads_arr[coord_x, coord_y] > pool_threshold:
+            continue
+        else:
+            layer_dict[coord_x].append(coord_y)
+            num_heads += 1
+        if num_heads == target_heads:
+            break
+    
+    return layer_dict
+
 
 def first_order_markov_sequence(tokens, args):
     seq = tokens[torch.randperm(args.chunk_size)]
@@ -394,6 +439,11 @@ def get_chunks_3rd_order(A, args):
             B_primitive[i, j] = patch_score.mean()
             
     return B_high_order, B_primitive
+
+
+
+
+
 
 def get_chunks_4th_order(A, args):
     """

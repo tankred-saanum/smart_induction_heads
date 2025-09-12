@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence
+from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_third_order_markov_sequence, unique_second_order_markov_sequence
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -60,10 +60,10 @@ for iter in range(args.iters):
             all_tokens = first_order_markov_sequence(tokens, args)
             
         elif args.markov_order == 2:
-            all_tokens, _ = second_order_markov_sequence(tokens, args)
+            all_tokens, _ = unique_second_order_markov_sequence(tokens, args)
             
         elif args.markov_order == 3:
-            all_token, _ = third_order_markov_sequence(tokens, args)
+            all_token, _ = unique_third_order_markov_sequence(tokens, args)
             
         batched_tokens.append(all_tokens)
 
@@ -91,10 +91,6 @@ elif args.markov_order == 2:
 
 else:
 
-#     A = torch.cat([accuracies, torch.ones(accuracies.size(0), 1)], dim=-1).view(accuracies.size(0), args.n_permute*args.n_permute, args.n_reps, args.chunk_size)    
-#     A = A[:, :-1, :, -1].mean(dim=1).mean(dim=0)
-
-# #.mean(dim=-1)
     A = torch.cat([accuracies, torch.ones(accuracies.size(0), 1)], dim=-1).view(accuracies.size(0), args.n_permute, args.n_reps, args.chunk_size*args.n_permute_primitive).mean(dim=0)   
     A = A[:, :, :-1].mean(dim=-1).ravel()
 

@@ -8,7 +8,7 @@ import matplotlib
 def get_config():
     parser = ArgumentParser()
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
-    parser.add_argument('--aggregate', default='mean', type=str)
+    parser.add_argument('--aggregate', default='topk', type=str)
     parser.add_argument('--threshold', default=0.4, type=float)   
     parser.add_argument('--cutoff', default=0, type=int)
     parser.add_argument('--markov_order', default=2, type=int)   
@@ -20,9 +20,9 @@ def get_config():
 args = get_config()
 markov_orders= [2, 3]
 
-models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
+models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-7B']
 
-fig, ax = plt.subplots(2, len(models), figsize=(6, 6), sharey=True, sharex=True)
+fig, ax = plt.subplots(2, 3, figsize=(6, 6), sharey=True, sharex=True)
 
 
 
@@ -126,7 +126,7 @@ for i, order in enumerate(markov_orders):
             accs = accs[max_idx].mean(dim=0)
         ax[i, 2].plot(accs*100, label=model_str)
 #ax[1, 0].set_ylabel('Accuracy %')
-ax[0, 2].set_title('Context\nMatching Heads')
+ax[0, 2].set_title('Generic\n ICL heads')
 
 
 

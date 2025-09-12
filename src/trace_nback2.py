@@ -29,7 +29,7 @@ def get_config():
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--test_size', default=0.25, type=float)
-    parser.add_argument('--module', default='residual', type=str, choices=['heads', 'mlp', 'attn', 'residual'])
+    parser.add_argument('--module', default='heads', type=str, choices=['heads', 'mlp', 'attn', 'residual'])
     args, _ = parser.parse_known_args()
     args.iters = args.total_batch_size // args.batch_size
     if args.markov_order==3:

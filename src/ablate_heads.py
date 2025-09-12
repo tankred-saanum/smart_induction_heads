@@ -1,4 +1,7 @@
 import torch
+import sys
+sys.path.insert(0, '/Users/tankredsaanum/Documents/smart_induction_heads')
+
 from matplotlib import pyplot as plt
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
 import numpy as np
@@ -9,7 +12,7 @@ import nnsight
 from nnsight import LanguageModel
 from pathlib import Path
 from collections import OrderedDict
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict
+from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, create_random_dict
 
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
@@ -48,9 +51,14 @@ def get_config():
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--threshold', default=0.4, type=float) 
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
-    parser.add_argument('--ablation_style', default='induction', type=str)   
+    parser.add_argument('--ablation_style', default='one_back', type=str)   
     args, _ = parser.parse_known_args()
+    if args.ablation_style=='random':
+        # set a minimal batch size when random ablation so we get a new set of heads for each batch
+        args.batch_size=1
+
     args.iters = args.total_batch_size//args.batch_size
+
     if args.markov_order==3:
         args.chunk_size = args.chunk_size//2
 
@@ -87,16 +95,27 @@ elif args.ablation_style == 'learning':
 elif args.ablation_style == 'one_back':
     # always load markov 2 decodability to make analyses comparable
     score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
-    
+elif args.ablation_style == 'random':
+    score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
 
-score_dict = create_LH_dict(score_arr, threshold=args.threshold)
-ablate_dict = score_dict
-print(ablate_dict)
+
+
+if args.ablation_style != 'random':
+    score_dict = create_LH_dict(score_arr, threshold=args.threshold)
+    ablate_dict = score_dict
+    print(ablate_dict)
+
+
 accuracies = []
 for iter in range(args.iters):
     print(iter/args.iters)
     batched_tokens = []
     chunk_ids = []
+    if args.ablation_style == 'random':
+        score_dict = create_random_dict(score_arr, threshold=args.threshold, pool_threshold=0.55)
+        ablate_dict = score_dict
+        print(ablate_dict)
+        
     for _ in range(args.batch_size):
         tokens = torch.randint(vocab_size, (args.chunk_size, ))
         if args.markov_order == 2:

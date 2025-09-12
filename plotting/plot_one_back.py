@@ -14,15 +14,15 @@ def get_config():
     return args
 args= get_config()
 args.module='heads'
-if True:
-    args = get_config()
-    args.module='heads'
-    order=2
-    exp_args = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
-    decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
-    decoding_accs[decoding_accs<0.9] = 0
-    plt.imshow(decoding_accs.T)
-    plt.show()
+# if True:
+#     args = get_config()
+#     args.module='heads'
+#     order=2
+#     exp_args = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
+#     decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+#     decoding_accs[decoding_accs<0.9] = 0
+#     plt.imshow(decoding_accs.T)
+#     plt.show()
 
 # f, ax = plt.subplots(1, 2, figsize=(10, 6))
 # markov_orders = [2, 3]
@@ -36,7 +36,7 @@ if True:
 
 # plt.show()
 def plot_max_learning_scores():
-    models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
+    models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-7B']
     fig, ax = plt.subplots(1, len(models), figsize=(12, 6), sharey=True)
     markov_orders = [2, 3]
     colors = ['#8a2f08', '#2d7acc']
