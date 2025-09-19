@@ -20,7 +20,7 @@ def get_config():
 args = get_config()
 markov_orders= [2, 3]
 
-models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-7B']
+models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
 
 fig, ax = plt.subplots(2, 3, figsize=(6, 6), sharey=True, sharex=True)
 

@@ -7,7 +7,7 @@ import matplotlib
 
 def get_config():
     parser = ArgumentParser()
-    parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
+    parser.add_argument('--model_name', default='Qwen/Qwen2.5-0.5B', type=str)
     parser.add_argument('--ablation_style', default='one_back', type=str)
     parser.add_argument('--aggregate', default='topk', type=str)
     parser.add_argument('--threshold', default=0.4, type=float)   
@@ -21,14 +21,17 @@ def get_config():
 args = get_config()
 markov_orders= [2, 3]
 
-models = ['Qwen/Qwen2.5-1.5B']
+figsize = plt.rcParams['figure.figsize']
+# Access individual values
+standard_width = figsize[0]   # 6.99866
+standard_height = figsize[1]  # 4.8
 
-fig, ax = plt.subplots(2, 3, figsize=(6, 6), sharey=True, sharex=True)
+fig, ax = plt.subplots(2, 2, figsize=(standard_width, standard_width), sharey=True, sharex=True)
 
 
 
 exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
-
+colors = ['#300501','#940e04', '#eb4034', '#f28e3d']
 for i, order in enumerate(markov_orders):
     order='markov2' if order==2 else 'markov3'
     #args.threshold=0.9 if order==2 else 0.7
@@ -49,10 +52,10 @@ for i, order in enumerate(markov_orders):
         mask[-1] = False
         accs = accs[:, mask]
         accs = accs.mean(dim=1)
-    ax[i, 0].plot(accs*100, label='No lesion')
+    ax[i, 0].plot(accs*100, label='No lesion', color=colors[0])
     
     
-    for threshold in [0.9, 0.85, 0.8]:
+    for t, threshold in enumerate([0.9, 0.85, 0.8]):
         args.threshold=threshold
         accs = torch.load(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)
         accs = torch.cat([accs, torch.ones(accs.size(0), 1)], dim=-1)
@@ -69,13 +72,13 @@ for i, order in enumerate(markov_orders):
             mask[-1] = False
             accs = accs[:, mask]
             accs = accs.mean(dim=1)
-        ax[i, 0].plot(accs*100, label=f'Accuracy > {args.threshold}')
+        ax[i, 0].plot(accs*100, label=f'Accuracy > {args.threshold}', color=colors[t+1])
         
         
         
     
     ax[i, 0].set_ylim([0., 100])
-ax[0, 0].set_title('LM Head')
+ax[0, 0].set_title('LM prediction')
 #ax[0, 0].set_ylabel('Accuracy %')
         
         
@@ -110,13 +113,13 @@ for i, order in enumerate(markov_orders):
     elif args.aggregate == 'topk':
         _, max_idx = accs.mean(dim=-1).topk(5)
         accs = accs[max_idx].mean(dim=0)
-    ax[i, 1].plot(accs*100, label='No lesion')
+    ax[i, 1].plot(accs*100, label='No lesion', color=colors[0])
     
     
     
     
     # now for the ablation
-    for threshold in [0.9, 0.85, 0.8]:
+    for t, threshold in enumerate([0.9, 0.85, 0.8]):
         args.threshold=threshold
         files = os.listdir(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}')
         aggregate = []
@@ -141,7 +144,7 @@ for i, order in enumerate(markov_orders):
         elif args.aggregate == 'topk':
             _, max_idx = accs.mean(dim=-1).topk(5)
             accs = accs[max_idx].mean(dim=0)
-        ax[i, 1].plot(accs*100, label=f'Accuracy > {args.threshold}')
+        ax[i, 1].plot(accs*100, label=f'Accuracy > {args.threshold}',color=colors[t+1])
         
     
     
@@ -152,37 +155,37 @@ ax[0, 1].set_title('Induction Heads')
 
 
 
-exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
-for i, order in enumerate(markov_orders):
-    order='markov2' if order==2 else 'markov3'
-    model_str= args.model_name.split("/")[-1]
-    learning_scores = torch.load(f'data/learning_scores/{order}/{model_str}/learning_scores.pt')
-    induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
-    files = os.listdir(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
-    aggregate = []
-    for _, file in enumerate(files):
-        if file in exceptions:
-            continue
-        head_address = file.split('_')[0]
-        layer, head = head_address.split('-')
-        learning_score = learning_scores[int(layer), int(head)]
+# exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
+# for i, order in enumerate(markov_orders):
+#     order='markov2' if order==2 else 'markov3'
+#     model_str= args.model_name.split("/")[-1]
+#     learning_scores = torch.load(f'data/learning_scores/{order}/{model_str}/learning_scores.pt')
+#     induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
+#     files = os.listdir(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
+#     aggregate = []
+#     for _, file in enumerate(files):
+#         if file in exceptions:
+#             continue
+#         head_address = file.split('_')[0]
+#         layer, head = head_address.split('-')
+#         learning_score = learning_scores[int(layer), int(head)]
         
-        induction_score = induction_scores[int(layer), int(head)]
-        if learning_score > 0.4 and induction_score < 0.4:
+#         induction_score = induction_scores[int(layer), int(head)]
+#         if learning_score > 0.4 and induction_score < 0.4:
         
-            accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
-            accs = accs.mean(dim=0)
-            aggregate.append(accs)
-    accs = torch.stack(aggregate, dim=0)
-    if args.aggregate == 'mean':
-        accs = accs.mean(dim=0)
-    elif args.aggregate == 'max':
-        max_idx = accs.mean(dim=-1).argmax()
-        accs = accs[max_idx]
-    elif args.aggregate == 'topk':
-        _, max_idx = accs.mean(dim=-1).topk(5)
-        accs = accs[max_idx].mean(dim=0)
-    ax[i, 2].plot(accs*100, label='No lesion')
+#             accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
+#             accs = accs.mean(dim=0)
+#             aggregate.append(accs)
+#     accs = torch.stack(aggregate, dim=0)
+#     if args.aggregate == 'mean':
+#         accs = accs.mean(dim=0)
+#     elif args.aggregate == 'max':
+#         max_idx = accs.mean(dim=-1).argmax()
+#         accs = accs[max_idx]
+#     elif args.aggregate == 'topk':
+#         _, max_idx = accs.mean(dim=-1).topk(5)
+#         accs = accs[max_idx].mean(dim=0)
+#     ax[i, 2].plot(accs*100, label='No lesion')
     
     
     
@@ -190,44 +193,44 @@ for i, order in enumerate(markov_orders):
     
     
     
-    for threshold in [0.9, 0.85, 0.8]:
-        args.threshold=threshold
-        files = os.listdir(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}')
-        aggregate = []
-        for _, file in enumerate(files):
-            if file in exceptions:
-                continue
-            head_address = file.split('_')[0]
-            layer, head = head_address.split('-')
-            learning_score = learning_scores[int(layer), int(head)]
+#     for threshold in [0.9, 0.85, 0.8]:
+#         args.threshold=threshold
+#         files = os.listdir(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}')
+#         aggregate = []
+#         for _, file in enumerate(files):
+#             if file in exceptions:
+#                 continue
+#             head_address = file.split('_')[0]
+#             layer, head = head_address.split('-')
+#             learning_score = learning_scores[int(layer), int(head)]
             
-            induction_score = induction_scores[int(layer), int(head)]
-            if learning_score > 0.4 and induction_score < 0.4:
+#             induction_score = induction_scores[int(layer), int(head)]
+#             if learning_score > 0.4 and induction_score < 0.4:
             
-                accs = torch.load(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
-                accs = accs.mean(dim=0)
-                aggregate.append(accs)
-        accs = torch.stack(aggregate, dim=0)
-        if args.aggregate == 'mean':
-            accs = accs.mean(dim=0)
-        elif args.aggregate == 'max':
-            max_idx = accs.mean(dim=-1).argmax()
-            accs = accs[max_idx]
-        elif args.aggregate == 'topk':
-            _, max_idx = accs.mean(dim=-1).topk(5)
-            accs = accs[max_idx].mean(dim=0)
-        ax[i, 2].plot(accs*100, label=f'Accuracy > {args.threshold}')
+#                 accs = torch.load(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
+#                 accs = accs.mean(dim=0)
+#                 aggregate.append(accs)
+#         accs = torch.stack(aggregate, dim=0)
+#         if args.aggregate == 'mean':
+#             accs = accs.mean(dim=0)
+#         elif args.aggregate == 'max':
+#             max_idx = accs.mean(dim=-1).argmax()
+#             accs = accs[max_idx]
+#         elif args.aggregate == 'topk':
+#             _, max_idx = accs.mean(dim=-1).topk(5)
+#             accs = accs[max_idx].mean(dim=0)
+#         ax[i, 2].plot(accs*100, label=f'Accuracy > {args.threshold}')
         
     
     
     
-#ax[1, 0].set_ylabel('Accuracy %')
-ax[0, 2].set_title('Context\nMatching Heads')
+# #ax[1, 0].set_ylabel('Accuracy %')
+# ax[0, 2].set_title('Context\nMatching Heads')
 
 
 
 h, l = ax[1, -1].get_legend_handles_labels()
-fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
+fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01))
 fig.supxlabel('Repetitions')
 fig.supylabel('Accuracy %')
 plt.savefig(f'figures/ablation={args.ablation_style}_{model_str}_graded.png', bbox_inches='tight')

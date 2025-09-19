@@ -12,6 +12,7 @@ axes.prop_cycle: cycler("color", ["teal",  "#500de0", "#9c370c", "#AD8301" , "#6
 figure.dpi: 120
 savefig.dpi: 300
 figure.figsize: 6.99866, 4.8
+figure.titlesize: x-large
 axes.titlesize: x-large
 axes.labelsize: x-large
 figure.labelsize: x-large

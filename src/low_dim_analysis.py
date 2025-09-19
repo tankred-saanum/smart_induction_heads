@@ -1,4 +1,7 @@
 import torch
+import sys
+sys.path.insert(0, '/Users/tankredsaanum/Documents/smart_induction_heads')
+
 from matplotlib import pyplot as plt
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
 import numpy as np
@@ -33,11 +36,12 @@ def get_chunks_3rd_order(A):
 def get_config():
     parser = ArgumentParser()
 
-    parser.add_argument('--n_reps', default=14, type=int)
+    parser.add_argument('--n_reps', default=24, type=int)
     parser.add_argument('--batch_size', default=1, type=int)
     parser.add_argument('--total_batch_size', default=1, type=int)
-    parser.add_argument('--n_permute', default=4, type=int)
-    parser.add_argument('--chunk_size', default=8, type=int)
+    parser.add_argument('--n_permute', default=3, type=int)
+    parser.add_argument('--ablate', default=0, type=int)
+    parser.add_argument('--chunk_size', default=4, type=int)
     parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--n_permute_primitive', default=4, type=int)
     parser.add_argument('--threshold', default=0.4, type=float) 
@@ -110,7 +114,12 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
 
 
 save_layers = [2, 4, 6, 8, 10, 12, 16, 18, 20, 22, 24, 26]
-save_layers = list(range(27))
+
+score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
+from src.utils import create_LH_dict
+score_dict = create_LH_dict(score_arr, threshold=0.9)
+ablate_dict = score_dict
+
 representation_dict = {}
 for iter in range(args.iters):
     print(iter/args.iters)
@@ -133,7 +142,17 @@ for iter in range(args.iters):
 
     with torch.no_grad():
         with model.trace(batched_tokens):
-
+            if args.ablate:
+                for layer in range(config.num_hidden_layers):
+                    if layer in list(ablate_dict.keys()):
+                        heads = ablate_dict[layer]
+            
+                        o_proj_in = model.model.layers[layer].self_attn.o_proj.input
+                        o_proj_in = o_proj_in.view(o_proj_in.size(0), o_proj_in.size(1), n_heads, o_proj_in.size(-1)//n_heads)
+                        o_proj_in[:, :, heads] *= 0
+                        o_proj_in = o_proj_in.view(o_proj_in.size(0), o_proj_in.size(1), -1)
+                        model.model.layers[layer].self_attn.o_proj.input = o_proj_in
+                        
             for layer in save_layers:
                 repr = model.model.layers[layer].output.save()
                 representation_dict[layer] = repr
@@ -144,9 +163,10 @@ from sklearn.manifold import MDS
 colors= perm_sequence.repeat_interleave(args.chunk_size)
 for layer in save_layers:
     x= representation_dict[layer][0].detach().cpu().squeeze(0)
-    x = x[len(x)//4:]
+    x = x[len(x)//3:]
     z = MDS(n_components=2).fit_transform(x)
     
-    plt.scatter(z[-150:, 0], z[-150:, 1], c=colors[-150:])
+    #plt.scatter(z[-250:, 0], z[-250:, 1], c=colors[-250:])
+    plt.scatter(z[:, 0], z[:, 1], c=colors[-len(x):])
     plt.title(f'Layer: {layer}')
     plt.show()
