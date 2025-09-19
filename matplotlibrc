@@ -1,14 +1,18 @@
-# Remove the top and right spines from the plots
 axes.spines.right: False
 axes.spines.top: False
 lines.linewidth:2
 # Color palette configuration
 image.lut: 256
 #axes.prop_cycle: cycler("color", ["#AF3029",  "#5E409D", "#BC5215", "#AD8301" , "#66800B", "#24837B", "#205EA6", "#A02F6F"])
-
-axes.prop_cycle: cycler("color", ["teal",  "#500de0", "#9c370c", "#AD8301" , "#66800B", "#24837B", "#205EA6", "#A02F6F"])
-
+axes.prop_cycle: cycler("color", ["teal",  "#500DE0", "#9C370C", "#AD8301" , "#66800B", "#24837B", "#205EA6", "#A02F6F"])
 # Retina figures configuration
 figure.dpi: 120
 savefig.dpi: 300
 figure.figsize: 6.99866, 4.8
+figure.titlesize: x-large
+axes.titlesize: x-large
+axes.labelsize: x-large
+figure.labelsize: x-large
+legend.fontsize: x-large
+xtick.labelsize: x-large
+ytick.labelsize: x-large
