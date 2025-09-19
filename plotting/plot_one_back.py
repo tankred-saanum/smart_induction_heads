@@ -35,9 +35,17 @@ args.module='heads'
 # cbar.set_label('Value')
 
 # plt.show()
+
+figsize = plt.rcParams['figure.figsize']
+# Access individual values
+standard_width = figsize[0]   # 6.99866
+standard_height = figsize[1]  # 4.8
 def plot_max_learning_scores():
-    models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-7B']
-    fig, ax = plt.subplots(1, len(models), figsize=(12, 6), sharey=True)
+    models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
+    fig, ax = plt.subplots(1, len(models), figsize=(standard_width, standard_height/1.5), sharey=True)
+    # for ax_i in ax:
+    #     ax_i.set_box_aspect(2)  # or 'auto', or a number like 2.0
+    
     markov_orders = [2, 3]
     colors = ['#8a2f08', '#2d7acc']
     lwd=3
@@ -52,15 +60,11 @@ def plot_max_learning_scores():
             ax[i].plot(scores, color=colors[j], label=f'Order {order}')
             ax[i].set_ylim([45, 100.])
             
-            # ax[i].spines['top'].set_visible(False)
-            # ax[i].spines['right'].set_visible(False)
-            # ax[i].spines['left'].set_linewidth(spn_lwd)
-            # ax[i].spines['bottom'].set_linewidth(spn_lwd)
             ax[i].set_title(model_str)
     ax[0].set_ylabel('1-Back Accuracy')
-    fig.supxlabel('Layer')
+    fig.supxlabel('Layer', y=-0.05)
     h, l = ax[-1].get_legend_handles_labels()
-    fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01))
+    fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, -0.1))
     #fig.tight_layout()
     plt.savefig('figures/max_1back.png', bbox_inches='tight')
     fig.show()
