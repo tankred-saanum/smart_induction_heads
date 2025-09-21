@@ -1,6 +1,7 @@
 import torch
 from argparse import ArgumentParser
 from matplotlib import pyplot as plt
+from transformers import PretrainedConfig
 def get_config():
     parser = ArgumentParser()
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
@@ -69,6 +70,65 @@ def plot_max_learning_scores():
     plt.savefig('figures/max_1back.png', bbox_inches='tight')
     fig.show()
 plot_max_learning_scores()
+
+
+
+
+border_decoding_accs = torch.load(f'data/border_classification_results/{args.model_name.split("/")[-1]}_markov{2}_border_classification.pt', weights_only=False)['results']
+border_decoding_accs.values()
+def dict2array(results_dict, model_name):
+    config = PretrainedConfig.from_pretrained(model_name)
+    arr = torch.zeros(config.num_hidden_layers, config.num_attention_heads)
+    
+    for k, v in results_dict.items():
+        l, h = k.split('-')
+        l=int(l)
+        h=int(h)
+        arr[l, h] = v
+    return arr
+dict2array(border_decoding_accs, model_name=args.model_name)
+
+def plot_max_learning_scoresv2():
+    models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
+    fig, ax = plt.subplots(2, len(models), figsize=(standard_width, standard_height/1.5), sharey=True)
+    # for ax_i in ax:
+    #     ax_i.set_box_aspect(2)  # or 'auto', or a number like 2.0
+    
+    markov_orders = [2, 3]
+    colors = ['#8a2f08', '#2d7acc']
+
+    for i, model_name in enumerate(models):
+        model_str = model_name.split('/')[-1]
+        for j, order in enumerate(markov_orders):
+            label = f'3rd order' if order==3 else '2nd order'
+            exp_args = torch.load(f'data/one_back_scores/markov{order}/{model_name.split("/")[-1]}/{args.module}/args.pt', weights_only=False)
+            decoding_accs = torch.load(f'data/one_back_scores/markov{order}/{model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
+            scores = decoding_accs.max(dim=-1)[0]*100
+            ax[0, i].plot(scores, color=colors[j], label=label)
+            ax[0, i].set_ylim([45, 100.])
+            
+            ax[0, i].set_title(model_str)
+            
+            
+            border_decoding_accs = torch.load(f'data/border_classification_results/{model_name.split("/")[-1]}_markov{order}_border_classification.pt', weights_only=False)['results']
+            border_decoding_accs = dict2array(border_decoding_accs, model_name=model_name)
+            max_border_scores = border_decoding_accs.max(dim=-1)[0]*100
+            
+            ax[1, i].plot(max_border_scores, color=colors[j], label=label)
+            ax[1, i].set_ylim([45, 100.])
+            
+            if i == 0:
+                ax[0, i].set_ylabel('1-Back accuracy')
+                ax[1, i].set_ylabel('Border decoding\naccuracy')
+    fig.supxlabel('Layer', y=-0.05)
+    h, l = ax[1, -1].get_legend_handles_labels()
+    fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, -0.1))
+    #fig.tight_layout()
+    plt.savefig('figures/1back_border.png', bbox_inches='tight')
+    fig.show()
+
+plot_max_learning_scoresv2()
+border_decoding_accs
 
 # args.model_name
 # order='3'

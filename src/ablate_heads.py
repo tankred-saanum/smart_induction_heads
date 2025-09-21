@@ -53,7 +53,7 @@ def get_config():
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)   
     parser.add_argument('--ablation_style', default='one_back', type=str)   
     args, _ = parser.parse_known_args()
-    if args.ablation_style=='random':
+    if args.ablation_style=='random' or args.ablation_style =='random_induction':
         # set a minimal batch size when random ablation so we get a new set of heads for each batch
         args.batch_size=1
 
@@ -97,7 +97,9 @@ elif args.ablation_style == 'one_back':
     score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
 elif args.ablation_style == 'random':
     score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
-
+elif args.ablation_style == 'random_induction':
+    args.threshold=0.4 # hard code threshold
+    score_arr = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
 
 
 if args.ablation_style != 'random':
@@ -107,6 +109,7 @@ if args.ablation_style != 'random':
 
 
 accuracies = []
+
 for iter in range(args.iters):
     print(iter/args.iters)
     batched_tokens = []
@@ -115,7 +118,10 @@ for iter in range(args.iters):
         score_dict = create_random_dict(score_arr, threshold=args.threshold, pool_threshold=0.55)
         ablate_dict = score_dict
         print(ablate_dict)
-        
+    elif args.ablation_style == 'random_induction':
+        score_dict = create_random_dict(score_arr, threshold=args.threshold, pool_threshold=args.threshold)
+        ablate_dict = score_dict
+        print(ablate_dict)
     for _ in range(args.batch_size):
         tokens = torch.randint(vocab_size, (args.chunk_size, ))
         if args.markov_order == 2:

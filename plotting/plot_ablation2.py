@@ -19,6 +19,7 @@ def get_config():
 
 
 args = get_config()
+head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
 models = ['Qwen/Qwen2.5-1.5B']
@@ -28,7 +29,7 @@ fig, ax = plt.subplots(2, 3, figsize=(6, 6), sharey=True, sharex=True)
 
 
 exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
-
+colors = ['#8a2f08', '#2d7acc']
 for i, order in enumerate(markov_orders):
     order='markov2' if order==2 else 'markov3'
     #args.threshold=0.9 if order==2 else 0.7
@@ -49,7 +50,7 @@ for i, order in enumerate(markov_orders):
         mask[-1] = False
         accs = accs[:, mask]
         accs = accs.mean(dim=1)
-    ax[i, 0].plot(accs*100, label='No lesion')
+    ax[i, 0].plot(accs*100, label='No lesion', color=colors[0])
     
     
     
@@ -68,7 +69,7 @@ for i, order in enumerate(markov_orders):
         mask[-1] = False
         accs = accs[:, mask]
         accs = accs.mean(dim=1)
-    ax[i, 0].plot(accs*100, label='Lesion')
+    ax[i, 0].plot(accs*100, label='Lesioned', color=colors[1])
     
     
     
@@ -109,7 +110,7 @@ for i, order in enumerate(markov_orders):
     elif args.aggregate == 'topk':
         _, max_idx = accs.mean(dim=-1).topk(5)
         accs = accs[max_idx].mean(dim=0)
-    ax[i, 1].plot(accs*100, label='No lesion')
+    ax[i, 1].plot(accs*100, label='No lesion', color=colors[0])
     
     
     
@@ -139,7 +140,7 @@ for i, order in enumerate(markov_orders):
     elif args.aggregate == 'topk':
         _, max_idx = accs.mean(dim=-1).topk(5)
         accs = accs[max_idx].mean(dim=0)
-    ax[i, 1].plot(accs*100, label='Lesioned')
+    ax[i, 1].plot(accs*100, label='Lesioned', color=colors[1])
     
     
     
@@ -180,7 +181,7 @@ for i, order in enumerate(markov_orders):
     elif args.aggregate == 'topk':
         _, max_idx = accs.mean(dim=-1).topk(5)
         accs = accs[max_idx].mean(dim=0)
-    ax[i, 2].plot(accs*100, label='No lesion')
+    ax[i, 2].plot(accs*100, label='No lesion', color=colors[0])
     
     
     
@@ -213,7 +214,7 @@ for i, order in enumerate(markov_orders):
     elif args.aggregate == 'topk':
         _, max_idx = accs.mean(dim=-1).topk(5)
         accs = accs[max_idx].mean(dim=0)
-    ax[i, 2].plot(accs*100, label='Lesioned')
+    ax[i, 2].plot(accs*100, label=f'{head_type} heads lesioned', color=colors[1])
     
     
     
@@ -223,10 +224,10 @@ ax[0, 2].set_title('Generic ICL\nHeads')
 
 
 
-h, l = ax[1, -1].get_legend_handles_labels()
+h, l = ax[-1, -1].get_legend_handles_labels()
 fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
 fig.supxlabel('Repetitions')
-fig.supylabel('Accuracy %')
+fig.supylabel('Accuracy %', x=0.00)
 plt.savefig(f'figures/ablation={args.ablation_style}_{model_str}.png', bbox_inches='tight')
 plt.show()
 

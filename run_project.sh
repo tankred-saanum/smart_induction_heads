@@ -27,3 +27,52 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=3 --bat
 
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=2 --batch_size=2 --ablation_style=induction
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=3 --batch_size=2
+
+
+
+
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=one_back --threshold=0.9
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.9
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=random --threshold=0.9
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.9
+
+
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=3 --batch_size=2 --ablation_style=one_back --threshold=0.85
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.85
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=3 --batch_size=2 --ablation_style=random --threshold=0.85
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85
+
+
+
+
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=one_back --threshold=0.8
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.8
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=random --threshold=0.8
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.8
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=one_back --threshold=0.75
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.75
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=3 --batch_size=2 --ablation_style=random --threshold=0.75
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-0.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.75
+
+
+python plotting/plot_ablation3.py --ablation_style=random --model_name=Qwen/Qwen2.5-0.5B --threshold=0.8 --markov_order=2
+python plotting/plot_ablation3.py --ablation_style=random --model_name=Qwen/Qwen2.5-0.5B --threshold=0.8 --markov_order=3
+python plotting/plot_ablation3.py --ablation_style=one_back --model_name=Qwen/Qwen2.5-0.5B --threshold=0.8 --markov_order=2
+python plotting/plot_ablation3.py --ablation_style=one_back --model_name=Qwen/Qwen2.5-0.5B --threshold=0.8 --markov_order=3
+
+python plotting/plot_ablation3.py --ablation_style=random --model_name=Qwen/Qwen2.5-0.5B --threshold=0.75 --markov_order=2
+python plotting/plot_ablation3.py --ablation_style=random --model_name=Qwen/Qwen2.5-0.5B --threshold=0.75 --markov_order=3
+python plotting/plot_ablation3.py --ablation_style=one_back --model_name=Qwen/Qwen2.5-0.5B --threshold=0.75 --markov_order=2
+python plotting/plot_ablation3.py --ablation_style=one_back --model_name=Qwen/Qwen2.5-0.5B --threshold=0.75 --markov_order=3
+
+
+
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=random_induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=3 --batch_size=2 --ablation_style=induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=3 --batch_size=2 --ablation_style=random_induction --threshold=0.4
+
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=2 --batch_size=2 --ablation_style=induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=2 --batch_size=2 --ablation_style=random_induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=3 --batch_size=2 --ablation_style=induction --threshold=0.4
+python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=3 --batch_size=2 --ablation_style=random_induction --threshold=0.4
