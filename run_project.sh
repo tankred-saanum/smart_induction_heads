@@ -76,3 +76,18 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=2 --batch
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=2 --batch_size=2 --ablation_style=random_induction --threshold=0.4
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=3 --batch_size=2 --ablation_style=induction --threshold=0.4
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-3B --markov_order=3 --batch_size=2 --ablation_style=random_induction --threshold=0.4
+
+
+
+
+python src/ablate_heads.py --model_name meta-llama/Llama-3.2-3B --markov_order=3 --batch_size=1 --ablation_style=one_back --threshold=0.85 --total_batch_size=16
+python src/ablate_heads.py --model_name meta-llama/Llama-3.2-3B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.85 --total_batch_size=16
+python src/ablate_heads.py --model_name meta-llama/Llama-3.2-3B --markov_order=3 --batch_size=1 --ablation_style=random --threshold=0.85 --total_batch_size=16
+python src/ablate_heads.py --model_name meta-llama/Llama-3.2-3B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85 --total_batch_size=16
+
+
+
+python src/ablate_heads.py --model_name google/gemma-2-2b --markov_order=3 --batch_size=2 --ablation_style=one_back --threshold=0.85
+python src/ablate_heads.py --model_name google/gemma-2-2b --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.85
+python src/ablate_heads.py --model_name google/gemma-2-2b --markov_order=3 --batch_size=2 --ablation_style=random --threshold=0.85
+python src/ablate_heads.py --model_name google/gemma-2-2b --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85

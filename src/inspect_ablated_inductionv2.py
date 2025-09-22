@@ -221,7 +221,7 @@ for condition in ['normal', 'ablate']:
     else:
         ablate_dict = {}
         style = '-'
-        label_suffix = 'Context match lesion'
+        label_suffix = 'Context match ablation'
         
     all_toks = []
     all_chunk_ids =[]
@@ -331,9 +331,9 @@ for condition in ['normal', 'ablate']:
                 ax[2].set_xlabel('Repetition')
                 if headmap_idx == 1:
                     
-                    ax[headmap_idx].set_title('Context lesion')
+                    ax[headmap_idx].set_title('Context ablation')
                 else:
-                    ax[headmap_idx].set_title('No lesion')
+                    ax[headmap_idx].set_title('No ablation')
                     
                 for j in range(grid_interval, attn.shape[1], grid_interval):
                     ax[headmap_idx].axvline(x=j-0.5, color='white', linewidth=lwd)
@@ -353,8 +353,8 @@ for condition in ['normal', 'ablate']:
                     Line2D([0], [0], color=colors[1], linewidth=2, label='Successor tokens'),
                     Line2D([0], [0], color=colors[0], linewidth=2, label='Correct context'),
                     #Line2D([0], [0], color='gray', linestyle='--', label='Chance'),
-                    Line2D([0], [0], color='black', linestyle='-', linewidth=2, label='No lesion'),
-                    Line2D([0], [0], color='black', linestyle='--', linewidth=2, label='Context lesion')
+                    Line2D([0], [0], color='black', linestyle='-', linewidth=2, label='No ablation'),
+                    Line2D([0], [0], color='black', linestyle='--', linewidth=2, label='Context ablation')
                 ]
                 # fig.legend(handles=legend_elements, 
                 # loc='lower right', 

@@ -85,7 +85,11 @@ def main():
     config = model.config
     n_heads = config.num_attention_heads
     vocab_size = config.vocab_size
-    head_dim = config.hidden_size // n_heads
+    if hasattr(config, 'head_dim'):
+        head_dim = config.head_dim
+    else:
+        head_dim = config.hidden_size // n_heads
+    print(config)
 
     # --- Data Generation ---
     all_batched_tokens = []
