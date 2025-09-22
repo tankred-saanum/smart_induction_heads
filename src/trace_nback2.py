@@ -87,7 +87,6 @@ def main():
     vocab_size = config.vocab_size
     head_dim = config.head_dim if hasattr(config, "head_dim") else config.hidden_size // n_heads
 
-
     # --- Data Generation ---
     all_batched_tokens = []
     all_chunk_ids = []
