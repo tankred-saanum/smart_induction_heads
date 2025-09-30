@@ -1,9 +1,19 @@
 # A Circuit for predicting Hierarchical Structure in-context in Large Language Models
 
+![alt text](figures/overview_induction.png "Title")
+
+## Abstract
+
+Large Language Models (LLMs) excel at in-context learning, the ability to use information provided as context to improve prediction of future tokens. Induction heads have been argued to play a crucial role for in-context learning in Transformer Language Models. These attention heads make a token attend to \emph{successors} of past occurrences of the same token in the input. This basic mechanism supports LLMs' ability to copy and predict repeating patterns. However, it is unclear if this same mechanism can support in-context learning of more complex repetitive patterns with hierarchical structure or contextual dependencies. Natural language is teeming with such cases. For instance, the article \texttt{the} in English usually prefaces multiple nouns in a text. When predicting which token succeeds a particular instance of \texttt{the}, we need to integrate further contextual cues from the text to predict the correct noun. If induction heads naively attend to all past instances of successor tokens of \texttt{the} in a context-independent manner, they cannot support this level of contextual information integration. In this study, we design a synthetic in-context learning task, where tokens are repeated with hierarchical dependencies. Here, attending uniformly to all successor tokens is not sufficient to accurately predict future tokens. Evaluating a range of LLMs on these token sequences and natural language analogues, we find adaptive induction heads that support prediction by learning what to attend to in-context. Next, we investigate how induction heads themselves learn in-context. We find evidence that learning is supported by attention heads that uncover a set of latent contexts, determining the different token transition relationships. Overall, we not only show that LLMs have induction heads that learn, but offer a complete mechanistic account of how LLMs learn to predict higher-order repetitive patterns in-context.
+
+## Repository info
+
 This is the repository for the project *A circuit for predicting hierarchical structure in-context in Large Language Models*.
 
 
 Our code can be used to reproduce results for various LLMs on huggingface, including models in the Qwen2.5 and Qwen3 family, Llama 3.1, SmolLM2 and Gemma 2. For other LLMs with different architectures, our code may need slight adaptations to run.
+
+
 
 
 ## Getting started
@@ -24,8 +34,11 @@ Suppose you want to analyze the induction head circuits of Qwen2.5-1.5B. First w
 python src/score_induction.py --model_name=Qwen/Qwen2.5-1.5B --threshold=0.4
 ```
 
-We say that any head that has a matching score $\ge 0.4$ is an induction head.
+We say that any head that has a matching score $\ge 0.4$ is an induction head. Let's inspect what comes out of this classification by running <code>python plotting/visualize_induction_scores.py --model=Qwen/Qwen2.5-1.5B</code>
 
+
+
+![alt text](figures/sample_induction_map.png "Title")
 
 ## In-context learning experiment
 Next, we want to know how the model fares in our proposed task. We have two hierarchy settings, which we control with the parameter <code>markov_order</code> (e.g. at which level in the hierarchy are transitions between chunks Markovian). Furthermore, the scripts have a default data generation setting which we used to generate the main results in the paper.
