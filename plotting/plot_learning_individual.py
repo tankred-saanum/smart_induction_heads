@@ -95,4 +95,5 @@ def main(
     
     fig.supylabel('Accuracy (%)')
     plt.tight_layout()
+    plt.savefig(f'figures/learning_{model_name.split("/")[-1]}.png')
     plt.show()

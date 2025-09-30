@@ -74,7 +74,13 @@ python src/find_learning_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=
 python src/find_learning_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3
 ```
 
-TODO let people plot the results of a single model
+Let's plot how the model performed. We can do this by calling
+<code>python plotting/plot_learning_individual.py --model_name=Qwen/Qwen2.5-1.5B</code>:
+
+![alt text](figures/learning_Qwen2.5-1.5B.png "Title")
+
+
+We see that not only does the LLM learn to solve the task, but the top 5 learning induction heads also show a strong learning signal. Moreover, we also plot heads that attend to the right context without attending to the successor tokens necessarily, potentially supporting learning in different ways.
 
 ### Natural language task
 
