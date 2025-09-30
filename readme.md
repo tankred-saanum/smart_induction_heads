@@ -20,7 +20,7 @@ All the results were generated using Python 3.12.5 .
 
 Suppose you want to analyze the induction head circuits of Qwen2.5-1.5B. First we need to know which of the model's heads are induction heads. We classify heads by running the following script:
 
-```
+```bash
 python src/score_induction.py --model_name=Qwen/Qwen2.5-1.5B --threshold=0.4
 ```
 
@@ -31,7 +31,7 @@ We say that any head that has a matching score $\ge 0.4$ is an induction head.
 Next, we want to know how the model fares in our proposed task. We have two hierarchy settings, which we control with the parameter <code>markov_order</code> (e.g. at which level in the hierarchy are transitions between chunks Markovian). Furthermore, the scripts have a default data generation setting which we used to generate the main results in the paper.
 
 
-```
+```python
 def get_config():
     parser = ArgumentParser()
 
@@ -56,7 +56,7 @@ If markov_order = 3, a chunk is a randomly permuted sequence of chunks, each of 
 
 With this in mind, we can obtain the model performance and induction head learning scores by running the following script:
 
-```
+```bash
 python src/find_learning_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2
 python src/find_learning_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3
 ```
@@ -69,7 +69,7 @@ TODO let people plot the results of a single model
 
 To find the heads we hypothesize are responsible for making induction heads learn (we call them *context matching heads*), we conduct decoding analyses. For our two experimental settings (<code>markov_order=m</code>), we can run the following script to obtain. Specifically, for a set of tokens in an $m$-order chunk $C=<x_1, ..., x_n>$., we train linear probes to decode whether the previous $m$-order chunk is identical to the $m$-order chunk composed of the tokens $C$. We get decodability scores for all heads by running the following script
 
-```
+```bash
 python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2 --module=heads
 python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3 --module=heads
 ```
@@ -98,7 +98,7 @@ When ablating the heads of a model we gotta make sure we have a good control con
 
 We can run these ablation experiments for <code>markov_order=2</code> with the following script:
 
-```
+```bash
 python src/ablate_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2 --ablation_style=induction --threshold=0.4
 python src/ablate_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2 --ablation_style=random_induction --threshold=0.4
 ```
@@ -107,7 +107,7 @@ Note that we change what heads to ablate with the <code>ablation_style</code> pa
 
 We can do the same with the context matching heads like this:
 
-```
+```bash
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=one_back --threshold=0.85
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85
 ```

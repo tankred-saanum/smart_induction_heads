@@ -1,7 +1,9 @@
 from pathlib import Path
+
 import torch
 from fastcore.script import call_parse
 from matplotlib import pyplot as plt
+
 
 @call_parse
 def main(

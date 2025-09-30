@@ -7,6 +7,7 @@ import torch
 from rich.console import Console
 from rich.text import Text
 from transformers import AutoConfig, AutoTokenizer
+
 from utils import (
     unique_second_order_markov_sequence,
     unique_third_order_markov_sequence,
