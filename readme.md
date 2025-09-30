@@ -95,8 +95,8 @@ python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3 --mod
 This script accepts a <code>module</code> argument. We can use this to decode from the residual stream and other parts of the model too.
 
 
-We can plot the decodability per
-TODO let people plot the decodability scores.
+We can plot the max decodability per layer by calling <code>python plotting/plot_context_decodability_individual.py --model_name=Qwen/Qwen2.5-1.5B</code>:
+![alt text](figures/context_decodability_sample.png "Title")
 
 
 ## Ablation experiments: Establishing a causal connection
@@ -110,6 +110,10 @@ Now let's define the output of the attention operation of this head for token $x
 $$z_{i} = \sum_j^{n}a_{i, j} v_j$$
 
 In our ablation analysis, this $z$ variable is the one we target. <code>nnsight</code> allows us to do pretty much what we want with this variable before it is passed to the <code>o_proj</code> linear layer that mixes the attention heads' outputs back into the residual stream. To ablate an attention head, we simply set the corresponding attention represention $z$ to a vector of zeros, $z=\boldsymbol{0}$. 
+
+
+### How do context matching heads inform 
+Let's look more closely at a context matching head and an induction head that work in tandem. We 
 
 ### Experiment
 
@@ -134,8 +138,6 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --bat
 Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$
 
 
-### How do context matching heads inform 
-Let's look more closely at a context matching head and an induction head that work in tandem. We 
 
 ## Open questions
 ## Citation
