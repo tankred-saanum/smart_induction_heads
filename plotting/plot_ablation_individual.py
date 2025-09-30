@@ -203,7 +203,7 @@ h, l = ax[-1, -1].get_legend_handles_labels()
 fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01))
 fig.supxlabel('Repetitions')
 fig.supylabel('Accuracy %', x=-0.025)
-title = {args.model_name.split("/")[-1]}
+title = args.model_name.split("/")[-1]
 fig.suptitle(f'{title}',y=1.025)
-plt.savefig(f'figures/ablation={args.non_random_ablation}_{title}_alt_models.png', bbox_inches='tight')
+plt.savefig(f'figures/ablation={args.non_random_ablation}_{title}.png', bbox_inches='tight')
 plt.show()

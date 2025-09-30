@@ -114,6 +114,7 @@ We can plot the max decodability per layer by calling <code>python plotting/plot
 ### Attention
 
 Finally, let's see if the induction heads and context matching heads are causally linked to the LLM's ability to learn in-context in our task. To do this we make use of the amazing <code>nnsight</code> library, where we can easily ablate, or lesion, parts of the attention computations that the LLM do in a forward pass. Recall that for a head $h_n$, and a sequence of tokens $X = <x_1, ..., x_n>$, scaled dot product attention computes attention scores between tokens $x_i$ and $x_j$, $a_{i,j}$, as follows: First, each token is mapped to keys $k$, queries $q$ and values $v$. A token $x_i$ attends to another token $x_j$ proportional to the exponential of the dot product between their query and key vector.
+
 $$a_{i, i} \propto exp{\left(\dfrac{q_i  k_j}{\sqrt{d}} \right)}$$
 
 Now let's define the output of the attention operation of this head for token $x_i$, namely $z_i$, as the sum of all tokens' value vector $v_j$ scaled by how much $x_i$ attends to token $x_j$ in head $h$:
@@ -122,7 +123,7 @@ $$z_{i} = \sum_j^{n}a_{i, j} v_j$$
 In our ablation analysis, this $z$ variable is the one we target. <code>nnsight</code> allows us to do pretty much what we want with this variable before it is passed to the <code>o_proj</code> linear layer that mixes the attention heads' outputs back into the residual stream. To ablate an attention head, we simply set the corresponding attention represention $z$ to a vector of zeros, $z=\boldsymbol{0}$. 
 
 
-### How do context matching heads inform 
+### How do context matching heads inform induction heads?
 Let's look more closely at a context matching head and an induction head that work in tandem in the model. We will ablate context matching head $13$-$4$, and observe how it affects a subsequent induction head $14$-$3$. We can do this by running the following experiment:
 
 <code>python src/inspect_ablated_inductionv2.py --total_batch_size=84 --model_name=Qwen/Qwen2.5-1.5B</code>
@@ -131,7 +132,7 @@ We see that the induction head largely attends to successor tokens still, but st
 
 ![alt text](figures/induction_heads_visualization_order=2_ablated.png "Title")
 
-### Experiment
+### Full scale ablations
 
 When ablating the heads of a model we gotta make sure we have a good control condition to measure the effect of the ablation. In our paper, we compare ablations of particular heads (induction heads or context matching heads), with ablations of the **same number** of randomly selected heads that do not classify as the target head in question.
 
@@ -151,8 +152,9 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --bat
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85
 ```
 
-Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$
+Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$. We can see that the effect of ablating the context matching heads are severe compared to ablating random heads in Qwen2.5-1.5B
 
+![alt text](figures/ablation=one_back_Qwen2.5-1.5B.png "Title")
 
 ## Citation
 
