@@ -80,7 +80,7 @@ Let's plot how the model performed. We can do this by calling
 <code>python plotting/plot_learning_individual.py --model_name=Qwen/Qwen2.5-1.5B</code>:
 
 <p align="center">
-<img src="figures/learning_Qwen2.5-1.5B.png" width="50%">
+<img src="figures/learning_Qwen2.5-1.5B.png" width="75%">
 </p>
 
 We see that not only does the LLM learn to solve the task, but the top 5 learning induction heads also show a strong learning signal. Moreover, we also plot heads that attend to the right context without attending to the successor tokens necessarily, potentially supporting learning in different ways.
@@ -94,7 +94,7 @@ python plotting/plot_natural_language.py
 ```
 
 <p align="center">
-<img src="figures/language_example.png" width="50%">
+<img src="figures/language_example.png" width="60%">
 </p>
 
 ## Decoding the latent context
@@ -115,7 +115,7 @@ python plotting/plot_context_decodability_individual.py --model_name=Qwen/Qwen2.
 ```
 
 <p align="center">
-<img src="figures/context_decodability_sample.png" width="50%">
+<img src="figures/context_decodability_sample.png" width="75%">
 </p>
 
 
