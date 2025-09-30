@@ -11,7 +11,7 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -117,7 +117,6 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
 save_layers = [2, 4, 6, 8, 10, 12, 16, 18, 20, 22, 24, 26]
 
 score_arr =  torch.load(f'data/one_back_scores/markov2/{args.model_name.split("/")[-1]}/heads/decoding_accuracies.pt')
-from src.utils import create_LH_dict
 score_dict = create_LH_dict(score_arr, threshold=0.9)
 ablate_dict = score_dict
 

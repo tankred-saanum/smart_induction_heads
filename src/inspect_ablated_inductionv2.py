@@ -11,9 +11,8 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, get_best_and_worst
 import matplotlib as mpl
-from utils import create_LH_dict, get_best_and_worst
 mpl.rcParams['mathtext.fontset'] = 'cm'
 from matplotlib.lines import Line2D
 
@@ -288,96 +287,83 @@ for condition in ['normal', 'ablate']:
     batched_tokens.unique().tolist()
     batched_tokens[0].tolist()
 
-    if args.markov_order==2:
-        grid_interval = args.chunk_size
+    grid_interval = args.chunk_size
 
-        for i, l in enumerate(ldict.keys()):
-            for h in ldict[l]:
-                attn_matrices = torch.cat(attn_heads[f'{l}-{h}'], dim=0)
-                #attn = attn_heads[][0][0].cpu().float()
-                pooled = get_chunks(attn_matrices)
-                head_accs = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps)
-                for i in range(1, pooled.size(1)):
-                    row_ideal = all_chunk_ids[:, i, :i]
-                    row_model = pooled[:, i, :i]
-                    most_attn_idx = row_model.argmax(dim=1)
-                    score = row_ideal[torch.arange(args.total_batch_size), most_attn_idx]
-                    #print(score.shape, 'score!')
-                    
-                    head_accs[:, i] = score
-                #print(head_accs)
-                induction_accs = get_induction_head_acc(attn_matrices, seq=all_toks)
-
-                attn = attn_matrices[0].float().cpu()
-                headmap_idx = 0 if condition!= 'ablate' else 1
-                ax[headmap_idx].imshow(attn, cmap='copper')
-                # ax[0].set_xticks(torch.arange(0, len(alpabet_labels), args.chunk_size)+1.0)
-                # ax[0].set_yticks(torch.arange(0, len(alpabet_labels), args.chunk_size)+1.0)
+    for i, l in enumerate(ldict.keys()):
+        for h in ldict[l]:
+            attn_matrices = torch.cat(attn_heads[f'{l}-{h}'], dim=0)
+            #attn = attn_heads[][0][0].cpu().float()
+            pooled = get_chunks(attn_matrices)
+            head_accs = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps)
+            for i in range(1, pooled.size(1)):
+                row_ideal = all_chunk_ids[:, i, :i]
+                row_model = pooled[:, i, :i]
+                most_attn_idx = row_model.argmax(dim=1)
+                score = row_ideal[torch.arange(args.total_batch_size), most_attn_idx]
+                #print(score.shape, 'score!')
                 
-                start_chr = 97
-                token_to_letter = {token: chr(start_chr+i) for i, token in enumerate(all_toks[0].unique().tolist())}
-                seq_letters = [token_to_letter[token] for token in all_toks[0].tolist()]
-                ax[headmap_idx].set_xticks(torch.arange(len(seq_letters)))
-                ax[headmap_idx].set_yticks(torch.arange(len(seq_letters)))
-                ax[headmap_idx].set_xticklabels([f"${letter}$" for letter in seq_letters], fontsize=fs-5)
-                ax[headmap_idx].set_yticklabels([f"${letter}$" for letter in seq_letters], fontsize=fs-5, rotation=0)
-                reps = torch.arange(args.n_reps*args.n_permute)
-                #label1='Matching context' if condition =='normal'
-                ax[2].plot(reps, head_accs.mean(dim=0)*100, color=colors[0], linestyle=style)
-                ax[2].plot(torch.arange(args.chunk_size*args.n_reps*args.n_permute)/args.chunk_size, induction_accs.mean(dim=0)*100, color=colors[1], linestyle=style)
-                #ax[2].plot(torch.arange(args.chunk_size*args.n_reps*args.n_permute)/args.chunk_size, torch.ones_like(induction_accs.mean(dim=0))*(100/3), color='gray', linestyle='--')
+                head_accs[:, i] = score
+            #print(head_accs)
+            induction_accs = get_induction_head_acc(attn_matrices, seq=all_toks)
+
+            attn = attn_matrices[0].float().cpu()
+            headmap_idx = 0 if condition!= 'ablate' else 1
+            ax[headmap_idx].imshow(attn, cmap='copper')
+ 
+            start_chr = 97
+            token_to_letter = {token: chr(start_chr+i) for i, token in enumerate(all_toks[0].unique().tolist())}
+            seq_letters = [token_to_letter[token] for token in all_toks[0].tolist()]
+            ax[headmap_idx].set_xticks(torch.arange(len(seq_letters)))
+            ax[headmap_idx].set_yticks(torch.arange(len(seq_letters)))
+            ax[headmap_idx].set_xticklabels([f"${letter}$" for letter in seq_letters], fontsize=fs-5)
+            ax[headmap_idx].set_yticklabels([f"${letter}$" for letter in seq_letters], fontsize=fs-5, rotation=0)
+            reps = torch.arange(args.n_reps*args.n_permute)
+            #label1='Matching context' if condition =='normal'
+            ax[2].plot(reps, head_accs.mean(dim=0)*100, color=colors[0], linestyle=style)
+            ax[2].plot(torch.arange(args.chunk_size*args.n_reps*args.n_permute)/args.chunk_size, induction_accs.mean(dim=0)*100, color=colors[1], linestyle=style)
+            #ax[2].plot(torch.arange(args.chunk_size*args.n_reps*args.n_permute)/args.chunk_size, torch.ones_like(induction_accs.mean(dim=0))*(100/3), color='gray', linestyle='--')
+            
+            ax[2].set_title('Attention accuracy (%)')
+            ax[2].set_ylim([0, 101])
+            ax[2].set_xlabel('Repetition')
+            if headmap_idx == 1:
                 
-                ax[2].set_title('Attention accuracy (%)')
-                ax[2].set_ylim([0, 101])
-                ax[2].set_xlabel('Repetition')
-                if headmap_idx == 1:
-                    
-                    ax[headmap_idx].set_title('Context ablation')
-                else:
-                    ax[headmap_idx].set_title('No ablation')
-                    
-                for j in range(grid_interval, attn.shape[1], grid_interval):
-                    ax[headmap_idx].axvline(x=j-0.5, color='white', linewidth=lwd)
-
-                for j in range(grid_interval, attn.shape[0], grid_interval):
-                    ax[headmap_idx].axhline(y=j-0.5, color='white', linewidth=lwd)
-                    
-                    
-                # Create custom legend elements
-                # Color legend elements
-                color_elements = [
-
-                ]
-
-                # Linestyle legend elements
-                legend_elements = [
-                    Line2D([0], [0], color=colors[1], linewidth=2, label='Successor tokens'),
-                    Line2D([0], [0], color=colors[0], linewidth=2, label='Correct context'),
-                    #Line2D([0], [0], color='gray', linestyle='--', label='Chance'),
-                    Line2D([0], [0], color='black', linestyle='-', linewidth=2, label='No ablation'),
-                    Line2D([0], [0], color='black', linestyle='--', linewidth=2, label='Context ablation')
-                ]
-                # fig.legend(handles=legend_elements, 
-                # loc='lower right', 
-                # ncol=4,  # Display in 4 columns (horizontal layout)
-                # bbox_to_anchor=(0.75, -0.18),  # Center horizontally, position at bottom
-                # frameon=True,
-                # fontsize=10,           # Control text size
-                # markerscale=1.75,       # Control line/marker size  
-                # columnspacing=1,     # Space between columns
-                # handlelength=1.75,      # Length of legend lines
-                # handletextpad=0.3)
+                ax[headmap_idx].set_title('Context ablation')
+            else:
+                ax[headmap_idx].set_title('No ablation')
                 
-                ax[2].legend(handles=legend_elements, 
-                loc='lower right', 
-                ncol=2,  # Display in 4 columns (horizontal layout)
-                #bbox_to_anchor=(0.75, -0.18),  # Center horizontally, position at bottom
-                frameon=True,
-                fontsize=8,           # Control text size
-                markerscale=1.75,       # Control line/marker size  
-                columnspacing=1,     # Space between columns
-                handlelength=1.75,      # Length of legend lines
-                handletextpad=0.3)
+            for j in range(grid_interval, attn.shape[1], grid_interval):
+                ax[headmap_idx].axvline(x=j-0.5, color='white', linewidth=lwd)
+
+            for j in range(grid_interval, attn.shape[0], grid_interval):
+                ax[headmap_idx].axhline(y=j-0.5, color='white', linewidth=lwd)
+                
+                
+            # Create custom legend elements
+            # Color legend elements
+            color_elements = [
+
+            ]
+
+            # Linestyle legend elements
+            legend_elements = [
+                Line2D([0], [0], color=colors[1], linewidth=2, label='Successor tokens'),
+                Line2D([0], [0], color=colors[0], linewidth=2, label='Correct context'),
+                Line2D([0], [0], color='black', linestyle='-', linewidth=2, label='No ablation'),
+                Line2D([0], [0], color='black', linestyle='--', linewidth=2, label='Context ablation')
+            ]
+
+            
+            ax[2].legend(handles=legend_elements, 
+            loc='lower right', 
+            ncol=2,  # Display in 4 columns (horizontal layout)
+            #bbox_to_anchor=(0.75, -0.18),  # Center horizontally, position at bottom
+            frameon=True,
+            fontsize=8,           # Control text size
+            markerscale=1.75,       # Control line/marker size  
+            columnspacing=1,     # Space between columns
+            handlelength=1.75,      # Length of legend lines
+            handletextpad=0.3)
 
 plt.savefig('figures/induction_heads_visualization_order=2_ablated.png', bbox_inches='tight')
 plt.show()

@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "..")
 import torch
 from matplotlib import pyplot as plt
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
@@ -6,7 +8,7 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):

@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
+from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, get_best_and_worst
 import matplotlib as mpl
 mpl.rcParams['mathtext.fontset'] = 'cm'
 # mpl.rcParams['text.usetex'] = True
@@ -219,7 +219,6 @@ decoding_accs = torch.load(f'data/one_back_scores/markov{args.markov_order}/{arg
 learning_scores = torch.load(f'data/learning_scores/markov{args.markov_order}/{args.model_name.split("/")[-1]}/learning_scores.pt')
 induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
 
-from src.utils import create_LH_dict, get_best_and_worst
 ldict = create_LH_dict(decoding_accs, threshold=0.90)
 best_address, worst_address = get_best_and_worst(learning_scores, induction_scores=induction_scores, threshold=0.4)
 best_address
