@@ -84,6 +84,10 @@ We see that not only does the LLM learn to solve the task, but the top 5 learnin
 
 ### Natural language task
 
+In natural language, there are many situations where simply learning bigram statistics is not sufficient to predict what comes next. We see below that learning induction heads can integrate contextual cues to make good predictions. This is not possible for 'static' induction heads that do not integrate such cues.
+
+![alt text](figures/language_example.png "Title")
+
 ## Decoding the latent context
 
 To find the heads we hypothesize are responsible for making induction heads learn (we call them *context matching heads*), we conduct decoding analyses. For our two experimental settings (<code>markov_order=m</code>), we can run the following script to obtain. Specifically, for a set of tokens in an $m$-order chunk $C=<x_1, ..., x_n>$., we train linear probes to decode whether the previous $m$-order chunk is identical to the $m$-order chunk composed of the tokens $C$. We get decodability scores for all heads by running the following script

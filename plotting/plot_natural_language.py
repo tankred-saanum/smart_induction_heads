@@ -1,7 +1,7 @@
-from fastcore.script import call_parse
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import torch
+from fastcore.script import call_parse
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 _ = torch.set_grad_enabled(False)
@@ -21,8 +21,6 @@ def main(model_name:str='Qwen/Qwen2.5-1.5B',
 
     prompt = "I visited San Antonio and saw the Alamo, and San Francisco where I saw the Golden Gate bridge. After seeing the Alamo I realized how much I liked San"
     toi = (" Antonio", " Francisco")
-    gl, gh = 19, 3
-    bl, bh = 2, 3
     fig, ax = plt.subplots(1, 1)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     attns = model(**inputs, output_attentions=True).attentions
