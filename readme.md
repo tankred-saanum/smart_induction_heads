@@ -1,6 +1,6 @@
 # A Circuit for predicting Hierarchical Structure in-context in Large Language Models
-
-You can read the paper [here](https://www.arxiv.org/abs/2509.21534).
+By Tankred Saanum<sup>\*</sup>, Can Demircan<sup>\*</sup>, Sam J. Gershman, and Eric Schulz.
+You can find our paper [here](https://www.arxiv.org/abs/2509.21534).
 
 ![alt text](figures/overview_induction.png "Title")
 
