@@ -1,16 +1,21 @@
 
 import sys
 from dataclasses import dataclass
-import sys
+
 sys.path.insert(0, "..")
 
-import matplotlib.pyplot as plt
 import matplotlib as mpl
-
-import torch
+import matplotlib.pyplot as plt
 import seaborn as sns
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from utils import first_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, get_chunk_ids_in_order, get_chunks
+from utils import (
+    first_order_markov_sequence,
+    get_chunk_ids_in_order,
+    get_chunks,
+    unique_second_order_markov_sequence,
+    unique_third_order_markov_sequence,
+)
 
 _ = torch.set_grad_enabled(False)
 model_name = "Qwen/Qwen2.5-1.5B"

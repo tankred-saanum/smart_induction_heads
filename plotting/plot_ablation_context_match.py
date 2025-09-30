@@ -1,8 +1,8 @@
+import os
+from argparse import ArgumentParser
+
 import torch
 from matplotlib import pyplot as plt
-from argparse import ArgumentParser
-import os
-import matplotlib
 
 
 def get_config():
@@ -37,6 +37,7 @@ random_ablation_label = 'Random heads ablated'
 
 
 import matplotlib.gridspec as gridspec
+
 fig = plt.figure(figsize=(14, 5))
 
 # Create two separate GridSpec objects with space between them

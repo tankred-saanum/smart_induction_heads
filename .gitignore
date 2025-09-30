@@ -3,3 +3,5 @@ uv.lock
 src/smart_induction_heads.egg-info/
 .DS_Store
 src/__pycache__/utils.cpython-312.pyc
+.ruff_cache/
+.DS_Store 

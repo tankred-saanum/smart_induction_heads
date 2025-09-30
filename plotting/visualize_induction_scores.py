@@ -1,6 +1,7 @@
+from argparse import ArgumentParser
+
 import torch
 from matplotlib import pyplot as plt
-from argparse import ArgumentParser
 
 
 def get_config():

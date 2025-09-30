@@ -1,8 +1,9 @@
+import os
+from argparse import ArgumentParser
+
 import torch
 from matplotlib import pyplot as plt
-from argparse import ArgumentParser
-import os
-import matplotlib
+
 
 def get_config():
     parser = ArgumentParser()

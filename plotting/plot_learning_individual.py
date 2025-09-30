@@ -4,6 +4,7 @@ import torch
 from fastcore.script import call_parse
 from matplotlib import pyplot as plt
 
+
 def aggregate_accs(
     accs:torch.Tensor, # tensor of accuracies for different heads, shape `(n_heads, n_repetitions)`
     method:str='topk'  # the aggregation method to use: 'mean', 'max', or 'topk'
