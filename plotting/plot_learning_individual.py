@@ -89,8 +89,8 @@ def main(
     ax[0, 1].set_title('Induction Heads')
     ax[0, 2].set_title('Generic\nICL Heads')
     ax[1, 1].set_xlabel('Repetitions')
-    ax[0, 0].set_ylabel('Markov Order 2')
-    ax[1, 0].set_ylabel('Markov Order 3')
+    ax[0, 0].set_ylabel('2nd order')
+    ax[1, 0].set_ylabel('3rd order')
     ax[0, 0].set_ylim([0., 100])
     
     fig.supylabel('Accuracy (%)')
