@@ -1,5 +1,7 @@
 # A Circuit for predicting Hierarchical Structure in-context in Large Language Models
 
+You can read the paper [here](https://www.arxiv.org/abs/2509.21534).
+
 ![alt text](figures/overview_induction.png "Title")
 
 ## Abstract
@@ -152,6 +154,16 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --bat
 Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$
 
 
-
-## Open questions
 ## Citation
+
+```bibtex
+@misc{saanum2025circuitpredictinghierarchicalstructure,
+      title={A circuit for predicting hierarchical structure in-context in Large Language Models}, 
+      author={Tankred Saanum and Can Demircan and Samuel J. Gershman and Eric Schulz},
+      year={2025},
+      eprint={2509.21534},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2509.21534}, 
+}
+```
