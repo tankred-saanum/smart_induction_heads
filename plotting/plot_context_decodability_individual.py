@@ -35,4 +35,5 @@ def main(
     ax.legend(ncols=2, loc='lower center', bbox_to_anchor=(0.5, -0.05), frameon=False)
     
     fig.tight_layout()
+    plt.savefig('figures/context_decodability_sample.png')
     plt.show()
