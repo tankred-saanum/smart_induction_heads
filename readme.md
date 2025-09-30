@@ -79,8 +79,9 @@ python src/find_learning_heads.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=
 Let's plot how the model performed. We can do this by calling
 <code>python plotting/plot_learning_individual.py --model_name=Qwen/Qwen2.5-1.5B</code>:
 
-![alt text](figures/learning_Qwen2.5-1.5B.png "Title")
-
+<p align="center">
+<img src="figures/learning_Qwen2.5-1.5B.png" width="50%">
+</p>
 
 We see that not only does the LLM learn to solve the task, but the top 5 learning induction heads also show a strong learning signal. Moreover, we also plot heads that attend to the right context without attending to the successor tokens necessarily, potentially supporting learning in different ways.
 
@@ -92,7 +93,9 @@ In natural language, there are many situations where simply learning bigram stat
 python plotting/plot_natural_language.py
 ```
 
-![alt text](figures/language_example.png "Title")
+<p align="center">
+<img src="figures/language_example.png" width="50%">
+</p>
 
 ## Decoding the latent context
 
@@ -105,8 +108,15 @@ python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3 --mod
 This script accepts a <code>module</code> argument. We can use this to decode from the residual stream and other parts of the model too.
 
 
-We can plot the max decodability per layer by calling <code>python plotting/plot_context_decodability_individual.py --model_name=Qwen/Qwen2.5-1.5B</code>:
-![alt text](figures/context_decodability_sample.png "Title")
+We can plot the max decodability per layer by calling
+
+```bash
+python plotting/plot_context_decodability_individual.py --model_name=Qwen/Qwen2.5-1.5B
+```
+
+<p align="center">
+<img src="figures/context_decodability_sample.png" width="50%">
+</p>
 
 
 ## Ablation experiments: Establishing a causal connection
@@ -115,10 +125,18 @@ We can plot the max decodability per layer by calling <code>python plotting/plot
 
 Finally, let's see if the induction heads and context matching heads are causally linked to the LLM's ability to learn in-context in our task. To do this we make use of the amazing <code>nnsight</code> library, where we can easily ablate, or lesion, parts of the attention computations that the LLM do in a forward pass. Recall that for a head $h_n$, and a sequence of tokens $X = <x_1, ..., x_n>$, scaled dot product attention computes attention scores between tokens $x_i$ and $x_j$, $a_{i,j}$, as follows: First, each token is mapped to keys $k$, queries $q$ and values $v$. A token $x_i$ attends to another token $x_j$ proportional to the exponential of the dot product between their query and key vector.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7441621a1ee564a4413cb92e0dc39af051b1a54f
 $$a_{i, i} \propto exp{\left(\dfrac{q_i  k_j}{\sqrt{d}} \right)}$$
 
+
 Now let's define the output of the attention operation of this head for token $x_i$, namely $z_i$, as the sum of all tokens' value vector $v_j$ scaled by how much $x_i$ attends to token $x_j$ in head $h$:
+
+
 $$z_{i} = \sum_j^{n}a_{i, j} v_j$$
+
 
 In our ablation analysis, this $z$ variable is the one we target. <code>nnsight</code> allows us to do pretty much what we want with this variable before it is passed to the <code>o_proj</code> linear layer that mixes the attention heads' outputs back into the residual stream. To ablate an attention head, we simply set the corresponding attention represention $z$ to a vector of zeros, $z=\boldsymbol{0}$. 
 
