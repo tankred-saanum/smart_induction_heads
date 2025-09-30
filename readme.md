@@ -166,7 +166,10 @@ python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --bat
 python src/ablate_heads.py --model_name Qwen/Qwen2.5-1.5B --markov_order=2 --batch_size=2 --ablation_style=random --threshold=0.85
 ```
 
-Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$. We can see that the effect of ablating the context matching heads are severe compared to ablating random heads in Qwen2.5-1.5B
+Here we classify a head as a context matching head if it has a latent context decodability $\ge0.85$.
+After repeating this ablation experiment for <code>markov_order=3</code> as well, we can plot the results with <code>python plotting/plot_ablation_individual.py --model_name=Qwen/Qwen2.5-1.5B --non_random_ablation=one_back --threshold=0.85</code>
+
+We can see that the effects of ablating the context matching heads are severe compared to ablating random heads in Qwen2.5-1.5B
 
 ![alt text](figures/ablation=one_back_Qwen2.5-1.5B.png "Title")
 
