@@ -8,7 +8,15 @@ Our code can be used to reproduce results for various LLMs on huggingface, inclu
 
 ## Getting started
 
-Make sure you have the dependencies installed. 
+Make sure you have the dependencies installed as follows:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+All the results were generated using Python 3.12.5 . 
 
 Suppose you want to analyze the induction head circuits of Qwen2.5-1.5B. First we need to know which of the model's heads are induction heads. We classify heads by running the following script:
 
