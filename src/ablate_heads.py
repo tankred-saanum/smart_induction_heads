@@ -67,7 +67,7 @@ args = get_config()
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 device='mps'
-model = LanguageModel(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
+model = LanguageModel(args.model_name, device_map="auto", torch_dtype=torch.bfloat16, attn_implementation="eager")
 tokenizer = model.tokenizer
 config = PretrainedConfig.from_pretrained(args.model_name)
 vocab_size = config.vocab_size

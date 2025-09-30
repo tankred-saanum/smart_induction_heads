@@ -51,9 +51,9 @@ def get_config():
 args = get_config()
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
-device='mps'
-model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
+model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16, attn_implementation="eager")
 tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
+device = model.device
 config = PretrainedConfig.from_pretrained(args.model_name)
 vocab_size = config.vocab_size
 n_heads = config.num_attention_heads # number of heads in the models, should get info directly from config
