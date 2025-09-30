@@ -1,17 +1,25 @@
+import sys
+
+import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
-import numpy as np
-import sys
+from transformers import AutoModelForCausalLM, AutoTokenizer, PretrainedConfig
+
 sys.path.insert(0, "..")
 
 
-from torch.nn import functional as F
 from argparse import ArgumentParser
 from collections import defaultdict
-from pathlib import Path
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, get_best_and_worst
+
 import matplotlib as mpl
+
+from utils import (
+    create_LH_dict,
+    get_best_and_worst,
+    unique_second_order_markov_sequence,
+    unique_third_order_markov_sequence,
+)
+
 mpl.rcParams['mathtext.fontset'] = 'cm'
 # mpl.rcParams['text.usetex'] = True
 # mpl.rcParams['font.family'] = 'serif'

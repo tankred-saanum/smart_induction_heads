@@ -1,6 +1,8 @@
-import torch
 from collections import defaultdict
-import random
+
+import torch
+
+
 def create_LH_dict(heads_arr, threshold):
     # heads is L x H
     layer_dict = defaultdict(list)

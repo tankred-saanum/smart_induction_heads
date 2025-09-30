@@ -1,6 +1,9 @@
-import torch
 from argparse import ArgumentParser
+
+import torch
 from matplotlib import pyplot as plt
+
+
 def get_config():
     parser = ArgumentParser()
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)

@@ -1,19 +1,25 @@
 import warnings
+
 warnings.filterwarnings("ignore")
-from transformers import PretrainedConfig
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-from einops import rearrange
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import balanced_accuracy_score as accuracy_score
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-import torch
+
 import nnsight
 import numpy as np
-from utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
+import torch
+from einops import rearrange
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import balanced_accuracy_score as accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+from utils import (
+    unique_second_order_markov_sequence,
+    unique_third_order_markov_sequence,
+)
+
 
 def get_config():
     parser = ArgumentParser()

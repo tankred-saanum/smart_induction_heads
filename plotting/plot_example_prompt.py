@@ -1,13 +1,16 @@
 import sys
 from dataclasses import dataclass
+
 sys.path.append('../.')
 
-from transformers import AutoTokenizer, AutoConfig
+import torch
 from rich.console import Console
 from rich.text import Text
-import torch
-from utils import unique_third_order_markov_sequence, unique_second_order_markov_sequence
-
+from transformers import AutoConfig, AutoTokenizer
+from utils import (
+    unique_second_order_markov_sequence,
+    unique_third_order_markov_sequence,
+)
 
 # model configs
 model_name = 'Qwen/Qwen2.5-1.5B'

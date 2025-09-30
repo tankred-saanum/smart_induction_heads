@@ -1,15 +1,20 @@
 import warnings
-import torch
-import nnsight
-import numpy as np
 from argparse import ArgumentParser
 from pathlib import Path
+
+import nnsight
+import numpy as np
+import torch
 from einops import rearrange
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import balanced_accuracy_score as accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from utils import unique_second_order_markov_sequence, unique_third_order_markov_sequence
+
+from utils import (
+    unique_second_order_markov_sequence,
+    unique_third_order_markov_sequence,
+)
 
 warnings.filterwarnings("ignore")
 
