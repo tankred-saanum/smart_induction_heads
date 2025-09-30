@@ -27,7 +27,6 @@ args = get_config()
 #head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
-models = ['meta-llama/Llama-3.2-3B']
 fig, ax = plt.subplots(2, 2, sharey=True, sharex=True)
 
 
