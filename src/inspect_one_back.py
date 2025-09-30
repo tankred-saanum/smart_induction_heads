@@ -12,9 +12,7 @@ from pathlib import Path
 from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
 import matplotlib as mpl
 mpl.rcParams['mathtext.fontset'] = 'cm'
-# mpl.rcParams['text.usetex'] = True
-# mpl.rcParams['font.family'] = 'serif'
-# mpl.rcParams['font.serif'] = ['Computer Modern']
+
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -155,7 +153,7 @@ def get_config():
     parser.add_argument('--total_batch_size', default=1, type=int)
     parser.add_argument('--n_permute', default=3, type=int)
     parser.add_argument('--chunk_size', default=3, type=int)
-    parser.add_argument('--markov_order', default=3, type=int)
+    parser.add_argument('--markov_order', default=2, type=int)
     parser.add_argument('--n_permute_primitive', default=3, type=int)
     parser.add_argument('--threshold', default=0.4, type=float) 
     parser.add_argument('--model_name', default='Qwen/Qwen2.5-1.5B', type=str)
@@ -218,14 +216,8 @@ decoding_accs = torch.load(f'data/one_back_scores/markov{args.markov_order}/{arg
 learning_scores = torch.load(f'data/learning_scores/markov{args.markov_order}/{args.model_name.split("/")[-1]}/learning_scores.pt')
 
 
-from src.utils import create_LH_dict
-ldict = create_LH_dict(decoding_accs, threshold=0.90)
-
-
-# ldict = {15:[7], 17:[3], 18:[10], 19:[6], 14:[3]}
-# ldict = {26:[4], 19:[2], 22:[7], 24:[9], 27:[6]}
-
 ldict = {13:[4], 14:[8]}
+
 if args.markov_order==2:
     grid_interval = args.chunk_size
     f, ax = plt.subplots(2, 2, figsize=(10, 8))
@@ -264,7 +256,7 @@ if args.markov_order==2:
             for j in range(grid_interval, attn.shape[0], grid_interval):
                 ax[1, i].axhline(y=j-0.5, color='white', linewidth=lwd)
 
-    plt.savefig('figures/one_back_heads_visualization_order=2.png', bbox_inches='tight')
+    #plt.savefig('figures/one_back_heads_visualization_order=2.png', bbox_inches='tight')
     plt.show()
 
 
@@ -311,46 +303,3 @@ if args.markov_order==3:
 
     plt.savefig('figures/one_back_heads_visualization_order=3.png', bbox_inches='tight')
     plt.show()
-
-# counter = 0
-# lwd=0.75
-# for i, l in enumerate(ldict.keys()):
-#     for h in ldict[l]:
-#         attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
-#         pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-#         # f, ax = plt.subplots(1, 2, figsize=(10, 8))
-#         #f.suptitle(f'layer {l} - head {h}')
-#         #ax[0].imshow(pooled)
-#         ax[counter].imshow(pooled, cmap='copper')
-#         ax[counter+1].imshow(attn, cmap='copper')
-
-        
-#         for j in range(grid_interval, attn.shape[1], grid_interval):
-#             ax[counter+1].axvline(x=j-0.5, color='white', linewidth=lwd)
-
-#         for j in range(grid_interval, attn.shape[0], grid_interval):
-#             ax[counter+1].axhline(y=j-0.5, color='white', linewidth=lwd)
-#         counter+=2
-# plt.show()
-
-
-# if True:
-#     for l in ldict.keys():
-#         for h in ldict[l]:
-#             attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
-#             pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-#             f, ax = plt.subplots(1, 2, figsize=(10, 8))
-#             f.suptitle(f'layer {l} - head {h}')
-#             #ax[0].imshow(pooled)
-#             ax[1].imshow(pooled, cmap='copper')
-#             ax[0].imshow(attn, cmap='copper')
-            
-#             for i in range(grid_interval, attn.shape[1], grid_interval):
-#                 ax[0].axvline(x=i-0.5, color='white', linewidth=1)
-
-#             for i in range(grid_interval, attn.shape[0], grid_interval):
-#                 ax[0].axhline(y=i-0.5, color='white', linewidth=1)
-#             plt.show()
-
-    
-# pooled.shape
