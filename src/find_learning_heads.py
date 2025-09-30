@@ -21,6 +21,8 @@ def get_chunks_3rd_order(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
         for j in range(args.n_permute*args.n_reps):
+            # here we look at whether the tokens that transition predictably between 2nd order chunks attend to the
+            # correct successor tokens from past instances of this 3rd order chunk
             rows = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, :]
             transition_idx = torch.arange(1, args.chunk_size+1)
             mask = transition_idx % (args.chunk_size//args.n_permute_primitive) == 0

@@ -192,7 +192,7 @@ args.module='heads'
 decoding_accs = torch.load(f'data/one_back_scores/markov{args.markov_order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
 learning_scores = torch.load(f'data/learning_scores/markov{args.markov_order}/{args.model_name.split("/")[-1]}/learning_scores.pt')
 
-
+# these are the heads that we are looking at
 ldict = {13:[4], 14:[8]}
 
 if args.markov_order==2:

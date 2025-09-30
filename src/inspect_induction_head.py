@@ -39,6 +39,7 @@ def get_chunks_3rd_order(A):
     return B
 
 def get_chunks_3rd_order_uniform(A):
+    ''' in contrast to its counterpart above, this function returns the attention scores for all tokens in a 3rd order chunk'''
     higher_order_chunk_size = args.chunk_size*args.n_permute_primitive
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):

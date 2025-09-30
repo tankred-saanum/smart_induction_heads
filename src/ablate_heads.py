@@ -115,6 +115,7 @@ for iter in range(args.iters):
     print(iter/args.iters)
     batched_tokens = []
     chunk_ids = []
+    # if we are in a random condition, we randomize the attention heads we ablate for each sample
     if args.ablation_style == 'random':
         score_dict = create_random_dict(score_arr, threshold=args.threshold, pool_threshold=0.55)
         ablate_dict = score_dict

@@ -52,7 +52,7 @@ def get_chunks(A, args):
     return B
 
 def calculate_nback_identity(all_chunk_ids_for_batch, args):
-    '''returns a binary variable which is one if the context n contexts back is the same as the current context'''
+    '''returns a binary variable which is 1 if the context n contexts back is the same as the current context, 0 otherwise'''
     
     batch_size, n_chunks = all_chunk_ids_for_batch.size(0), all_chunk_ids_for_batch.size(1)
     identities = torch.zeros(batch_size, n_chunks, device=all_chunk_ids_for_batch.device)
