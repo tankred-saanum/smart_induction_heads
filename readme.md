@@ -10,7 +10,7 @@ You can read the paper [here](https://www.arxiv.org/abs/2509.21534).
 
 ## Repository info
 
-This is the repository for the project *A circuit for predicting hierarchical structure in-context in Large Language Models*.
+This is the repository for the project **A circuit for predicting hierarchical structure in-context in Large Language Models**.
 
 
 Our code can be used to reproduce results for various LLMs on huggingface, including models in the Qwen2.5 and Qwen3 family, Llama 3.1, SmolLM2 and Gemma 2. For other LLMs with different architectures, our code may need slight adaptations to run.
@@ -113,7 +113,7 @@ We can plot the max decodability per layer by calling <code>python plotting/plot
 
 ### Attention
 
-Finally, let's see if the induction heads and context matching heads are causally linked to the LLM's ability to learn in-context in our task. To do this we make use of the amazing <code>nnsight</code> library, where we can easily ablate, or lesion, parts of the attention computations that the LLM do in a forward pass. Recall that for a head $h_n$, and a sequence of tokens $X = <x_1, ..., x_n>$, scaled dot product attention computes attention scores between tokens $x_i$ and $x_j$, $a_{i,j}, as follows: First, each token is mapped to keys $k$, queries $q$ and values $v$. A token $x_i$ attends to another token $x_j$ proportional to the exponential of the dot product between their query and key vector.
+Finally, let's see if the induction heads and context matching heads are causally linked to the LLM's ability to learn in-context in our task. To do this we make use of the amazing <code>nnsight</code> library, where we can easily ablate, or lesion, parts of the attention computations that the LLM do in a forward pass. Recall that for a head $h_n$, and a sequence of tokens $X = <x_1, ..., x_n>$, scaled dot product attention computes attention scores between tokens $x_i$ and $x_j$, $a_{i,j}$, as follows: First, each token is mapped to keys $k$, queries $q$ and values $v$. A token $x_i$ attends to another token $x_j$ proportional to the exponential of the dot product between their query and key vector.
 $$a_{i, i} \propto exp{\left(\dfrac{q_i  k_j}{\sqrt{d}} \right)}$$
 
 Now let's define the output of the attention operation of this head for token $x_i$, namely $z_i$, as the sum of all tokens' value vector $v_j$ scaled by how much $x_i$ attends to token $x_j$ in head $h$:
@@ -127,13 +127,13 @@ Let's look more closely at a context matching head and an induction head that wo
 
 <code>python src/inspect_ablated_inductionv2.py --total_batch_size=84 --model_name=Qwen/Qwen2.5-1.5B</code>
 
-We see that the induction head largely attends to successor tokens still, but strikingly, loses its ability to attend to successor tokens from *the right contexts*
+We see that the induction head largely attends to successor tokens still, but strikingly, loses its ability to attend to successor tokens from **the right contexts**
 
 ![alt text](figures/induction_heads_visualization_order=2_ablated.png "Title")
 
 ### Experiment
 
-When ablating the heads of a model we gotta make sure we have a good control condition to measure the effect of the ablation. In our paper, we compare ablations of particular heads (induction heads or context matching heads), with ablations of the *same number* of randomly selected heads that do not classify as the target head in question.
+When ablating the heads of a model we gotta make sure we have a good control condition to measure the effect of the ablation. In our paper, we compare ablations of particular heads (induction heads or context matching heads), with ablations of the **same number** of randomly selected heads that do not classify as the target head in question.
 
 We can run these ablation experiments for <code>markov_order=2</code> with the following script:
 
