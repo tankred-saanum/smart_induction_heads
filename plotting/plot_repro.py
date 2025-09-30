@@ -24,7 +24,6 @@ def get_config():
 
 
 args = get_config()
-#head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
 fig, ax = plt.subplots(2, 3, figsize=(12, 5), sharey=False, sharex=False)

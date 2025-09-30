@@ -136,38 +136,3 @@ fig.supxlabel('Repetitions')
 fig.supylabel('Accuracy %', x=0.00)
 plt.savefig('figures/learning.png', bbox_inches='tight')
 plt.show()
-
-# avgs = []
-# score=0
-# max_idx = 0
-# files = os.listdir(f'data/learning_scores/{order}/{model_name.split("/")[-1]}')
-# for i, file in enumerate(files):
-#     if file in exceptions:
-#         continue
-
-#     accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/{file}', weights_only=False)
-#     accs = accs.mean(dim=0)
-
-#     plt.plot(accs, linewidth=1)
-
-# plt.show()
-# ax[0].plot(torch.stack(avgs)[max_idx], linewidth=1)
-# ax[0].set_ylim([0., 1.1])
-
-# accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)
-# accs = torch.cat([accs, torch.ones(accs.size(0), 1)], dim=-1)
-
-# if args.markov_order==2:
-#     accs = accs.view(accs.size(0), -1, 8)
-#     accs = accs.mean(dim=0)
-#     accs = accs[:, :-1].mean(dim=1)
-# elif args.markov_order ==3:
-#     accs = accs.view(accs.size(0), -1, 4*4)
-#     accs = accs.mean(dim=0)
-#     mask = torch.arange(1, (4*4)+1) % 4 == 0
-#     mask[-1] = False
-#     accs = accs[:, mask]
-#     accs = accs.mean(dim=1)
-# ax[-1].plot(accs)
-# ax[-1].set_ylim([0., 1.1])
-# plt.show()

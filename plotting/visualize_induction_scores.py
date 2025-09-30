@@ -17,4 +17,7 @@ scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt'
 scores[scores<args.threshold] = 0.0
 plt.imshow(scores.T)
 plt.colorbar()
+plt.xlabel('Layers')
+plt.ylabel('Heads')
+plt.title(f'Thresholded at {args.threshold}')
 plt.show()
