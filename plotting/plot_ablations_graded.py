@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -21,8 +20,7 @@ def get_config():
 args = get_config()
 markov_orders= [2, 3]
 
-figsize = plt.rcParams['figure.figsize']
-# Access individual values
+
 standard_width = figsize[0]   # 6.99866
 standard_height = figsize[1]  # 4.8
 
@@ -34,7 +32,7 @@ exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
 colors = ['#300501','#940e04', '#eb4034', '#f28e3d']
 for i, order in enumerate(markov_orders):
     order='markov2' if order==2 else 'markov3'
-    #args.threshold=0.9 if order==2 else 0.7
+
     files = os.listdir(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
     exp_args = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/args.pt', weights_only=False)
     accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)
@@ -79,8 +77,7 @@ for i, order in enumerate(markov_orders):
     
     ax[i, 0].set_ylim([0., 100])
 ax[0, 0].set_title('LM prediction')
-#ax[0, 0].set_ylabel('Accuracy %')
-        
+
         
 
 

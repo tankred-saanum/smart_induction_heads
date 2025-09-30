@@ -71,8 +71,6 @@ args = Args()
 third_order_args = Args(n_reps=5)
 
 
-#tokens = torch.randint(low=0, high=150000, size=(args.chunk_size,))
-#tokens = torch.randperm(150000)[:args.chunk_size]
 tokens = torch.tensor([0, 1, 2])
 seq = first_order_markov_sequence(tokens, basic_args)
 seq2, chunk2, perms2 = unique_second_order_markov_sequence(tokens, args, return_perms=True)
@@ -262,11 +260,6 @@ axs[1,1].set_yticks(torch.arange(len(chunk_ids))*args.n_permute + (0.5*args.n_pe
 axs[1,1].set_xticklabels([f"${id_to_letter[id]}$" for id in chunk_ids], fontsize=large_fs)
 axs[1,1].set_yticklabels([f"${id_to_letter[id]}$" for id in chunk_ids], fontsize=large_fs, rotation=0)
 
-# axs[1,1].set_xticks(torch.arange(len(seq2_letters)) + 0.5)
-# axs[1,1].set_yticks(torch.arange(len(seq2_letters)) + 0.5)
-# axs[1,1].set_xticklabels([f"${letter}$" for letter in seq2_letters], fontsize=15, rotation=0)
-# axs[1,1].set_yticklabels([f"${letter}$" for letter in seq2_letters], fontsize=15, rotation=0)
-
 
 sns.heatmap(seq_3_chunks.cpu().float(), cbar=False, cmap="copper", linewidths=1, linecolor='black', ax=axs[2,0])
 chunk_ids_3 = get_chunk_ids_in_order(perms3)
@@ -288,7 +281,7 @@ axs[2,0].set_yticklabels([f"${id_to_letter[id]}$" for id in chunk_ids_3], fontsi
 sns.heatmap(seq_3_chunks_primitive.cpu().float(), cbar=False, cmap="copper", linewidths=1, linecolor='black', ax=axs[2,1])
 chunk_ids = get_chunk_ids_in_order(primitveperms3)
 add_copying_attention_borders(axs[2,1], seq_3_chunks_primitive.cpu().float(), torch.tensor(chunk_ids))
-#id_to_letter = {i: chr(945 + i) for i in range(len(set(chunk_ids)))}
+
 axs[2,1].set_xticks(torch.arange(len(chunk_ids_3))*third_order_args.n_permute + (0.5*third_order_args.n_permute))
 axs[2,1].set_yticks(torch.arange(len(chunk_ids_3))*third_order_args.n_permute + (0.5*third_order_args.n_permute))
 axs[2,1].set_xticklabels([f"${id_to_letter[id]}$" for id in chunk_ids_3], fontsize=large_fs)

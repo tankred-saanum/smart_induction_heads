@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 

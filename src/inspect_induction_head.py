@@ -1,18 +1,12 @@
 import sys
-
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from transformers import AutoModelForCausalLM, AutoTokenizer, PretrainedConfig
-
 sys.path.insert(0, "..")
-
-
 from argparse import ArgumentParser
 from collections import defaultdict
-
 import matplotlib as mpl
-
 from utils import (
     create_LH_dict,
     get_best_and_worst,
@@ -21,9 +15,7 @@ from utils import (
 )
 
 mpl.rcParams['mathtext.fontset'] = 'cm'
-# mpl.rcParams['text.usetex'] = True
-# mpl.rcParams['font.family'] = 'serif'
-# mpl.rcParams['font.serif'] = ['Computer Modern']
+
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
     for i in range(args.n_permute*args.n_reps):
@@ -53,30 +45,13 @@ def get_chunks_3rd_order_uniform(A):
         for j in range(args.n_permute*args.n_reps):
             B[:, i, j] = A[:, (i*higher_order_chunk_size):(i+1)*higher_order_chunk_size, (j*higher_order_chunk_size):(j+1)*higher_order_chunk_size].reshape(args.total_batch_size, -1).mean(dim=-1)
     
-            # rows = A[:, (i*args.chunk_size):(i+1)*args.chunk_size, :]
-            # transition_idx = torch.arange(1, args.chunk_size+1)
-            # mask = transition_idx % (args.chunk_size//args.n_permute_primitive) == 0
-            # mask[-1] = False
-            # rows = rows[:, mask]
-            # patch_score = rows[:, :, (j*args.chunk_size):(j+1)*args.chunk_size]
-            
-            # B[:, i, j] = patch_score.reshape(args.total_batch_size, -1).mean(dim=-1)
-            
     return B
 
 def unique_second_order_markov_sequence(tokens, args, return_perms=False):
-    """
-    Generates a sequence of tokens based on a second-order Markov structure.
 
-    Returns:
-        all_tokens (Tensor): The concatenated sequence of all tokens.
-        chunk_id (Tensor): A matrix indicating which tokens belong to the same original chunk.
-        permuted_sequence (Tensor): The sequence of indices of the permutations used.
-        chunked_sequence (Tensor): The sequence of permutations (chunks) as they appear.
-    """
     perms = []
     used_perms_indices = set()
-    # Generate unique permutations of the input tokens
+    
     while len(perms) < args.n_permute:
         perm_idx = torch.randperm(args.chunk_size)
         perm_idx_tuple = tuple(perm_idx.tolist())
@@ -84,7 +59,7 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
             used_perms_indices.add(perm_idx_tuple)
             perms.append(tokens[perm_idx])
         
-    # Create a random sequence of these unique permutations
+    
     ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
     permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
     
@@ -92,13 +67,12 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
     for seq_id in permuted_sequence:
         chunked_sequence_list.append(perms[seq_id])
 
-    # Stack the list of chunks into a single tensor
+    
     chunked_sequence = torch.stack(chunked_sequence_list, dim=0)
     
-    # Flatten the sequence for other uses
+    
     all_tokens = torch.cat(chunked_sequence_list, dim=0)
     
-    # Calculate chunk_id for identifying tokens from the same original permutation instance
     chunk_id = (torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
     
     if return_perms:
@@ -106,16 +80,11 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
     return all_tokens, chunk_id
 
 def unique_third_order_markov_sequence(tokens, args, return_perms=False):
-    """
-    Generates a sequence of tokens based on a third-order Markov structure.
-    Optionally returns detailed permutation and chunk information for both
-    high-order and primitive levels.
-    """
+
     
-    # --- First-order permutations (primitives) ---
     perms = []
     used_perms_indices = set()
-    # Note: args.chunk_size here is assumed to be the size of the primitive chunk.
+    
     while len(perms) < args.n_permute_primitive:
         perm_idx = torch.randperm(args.chunk_size)
         perm_idx_tuple = tuple(perm_idx.tolist())
@@ -123,7 +92,7 @@ def unique_third_order_markov_sequence(tokens, args, return_perms=False):
             used_perms_indices.add(perm_idx_tuple)
             perms.append(tokens[perm_idx])
         
-    # --- Second-order permutations (sequences of primitives) ---
+    
     perms2 = []
     primitive_compositions = [] 
     used_perms2_indices = set()
@@ -136,7 +105,7 @@ def unique_third_order_markov_sequence(tokens, args, return_perms=False):
             _perm = torch.cat([perms[idx] for idx in perm_idx], dim=0)
             perms2.append(_perm)
 
-    # --- Create the final sequence by permuting the second-order chunks ---
+   
     ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
     high_order_permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
     
@@ -146,10 +115,10 @@ def unique_third_order_markov_sequence(tokens, args, return_perms=False):
         high_order_chunked_list.append(perms2[seq_id])
         primitive_permuted_list.append(primitive_compositions[seq_id])
 
-    # Flatten the sequence for the primary return value
+    
     all_tokens = torch.cat(high_order_chunked_list, dim=0)
     
-    # Calculate chunk_id for identifying tokens from the same high-order chunk
+    
     chunk_id = (torch.cdist(high_order_permuted_sequence.unsqueeze(-1).float(), high_order_permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
     
     if return_perms:
@@ -171,8 +140,7 @@ def get_config():
     parser.add_argument('--seed', default=42, type=int)
     args, _ = parser.parse_known_args()
     args.iters = args.total_batch_size//args.batch_size
-    # if args.markov_order==3:
-    #     args.chunk_size = args.chunk_size//2
+
 
     return args
 args = get_config()
@@ -183,7 +151,7 @@ model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto",
 tokenizer = AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
 config = PretrainedConfig.from_pretrained(args.model_name)
 vocab_size = config.vocab_size
-n_heads = config.num_attention_heads # number of heads in the models, should get info directly from config
+n_heads = config.num_attention_heads 
 
 attn_heads = defaultdict(list)
 all_chunk_ids =[]
@@ -231,8 +199,7 @@ ldict = create_LH_dict(decoding_accs, threshold=0.90)
 best_address, worst_address = get_best_and_worst(learning_scores, induction_scores=induction_scores, threshold=0.4)
 best_address
 worst_address
-# ldict = {15:[7], 17:[3], 18:[10], 19:[6], 14:[3]}
-# ldict = {26:[4], 19:[2], 22:[7], 24:[9], 27:[6]}
+
 
 ldict = {best_address[0]:[best_address[1]], worst_address[0]:[worst_address[1]]}
 
@@ -321,46 +288,3 @@ if args.markov_order==3:
 
     plt.savefig('figures/one_back_heads_visualization_order=3.png', bbox_inches='tight')
     plt.show()
-
-# counter = 0
-# lwd=0.75
-# for i, l in enumerate(ldict.keys()):
-#     for h in ldict[l]:
-#         attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
-#         pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-#         # f, ax = plt.subplots(1, 2, figsize=(10, 8))
-#         #f.suptitle(f'layer {l} - head {h}')
-#         #ax[0].imshow(pooled)
-#         ax[counter].imshow(pooled, cmap='copper')
-#         ax[counter+1].imshow(attn, cmap='copper')
-
-        
-#         for j in range(grid_interval, attn.shape[1], grid_interval):
-#             ax[counter+1].axvline(x=j-0.5, color='white', linewidth=lwd)
-
-#         for j in range(grid_interval, attn.shape[0], grid_interval):
-#             ax[counter+1].axhline(y=j-0.5, color='white', linewidth=lwd)
-#         counter+=2
-# plt.show()
-
-
-# if True:
-#     for l in ldict.keys():
-#         for h in ldict[l]:
-#             attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
-#             pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-#             f, ax = plt.subplots(1, 2, figsize=(10, 8))
-#             f.suptitle(f'layer {l} - head {h}')
-#             #ax[0].imshow(pooled)
-#             ax[1].imshow(pooled, cmap='copper')
-#             ax[0].imshow(attn, cmap='copper')
-            
-#             for i in range(grid_interval, attn.shape[1], grid_interval):
-#                 ax[0].axvline(x=i-0.5, color='white', linewidth=1)
-
-#             for i in range(grid_interval, attn.shape[0], grid_interval):
-#                 ax[0].axhline(y=i-0.5, color='white', linewidth=1)
-#             plt.show()
-
-    
-# pooled.shape

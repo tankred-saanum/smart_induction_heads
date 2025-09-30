@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -22,13 +21,9 @@ def get_config():
 
 
 args = get_config()
-#head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
 models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
-#fig, ax = plt.subplots(2, len(models), sharey=True, sharex=True)
-
-
 
 exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
 colors = ['#8a2f08', '#2d7acc', '#eba134']
@@ -40,20 +35,19 @@ import matplotlib.gridspec as gridspec
 
 fig = plt.figure(figsize=(14, 5))
 
-# Create two separate GridSpec objects with space between them
-# Left grid: occupies left 45% of figure
+# left grid
 gs1 = gridspec.GridSpec(2, 3, figure=fig, 
-                        left=0.05, right=0.45,  # Left grid positioning
+                        left=0.05, right=0.45,  
                         top=0.95, bottom=0.1,
-                        hspace=0.3, wspace=0.3)  # Internal spacing within grid
+                        hspace=0.3, wspace=0.3)  
 
-# Right grid: occupies right 45% of figure (leaving 10% gap in middle)
+# right grid
 gs2 = gridspec.GridSpec(2, 3, figure=fig,
-                        left=0.55, right=0.95,  # Right grid positioning  
+                        left=0.55, right=0.95,   
                         top=0.95, bottom=0.1,
-                        hspace=0.3, wspace=0.3)  # Internal spacing within grid
+                        hspace=0.3, wspace=0.3)
 
-# Create subplots for first 2x3 grid
+# create subplots for first 2x3 grid
 left_axes = []
 for i in range(2):
     left_sub_axes= []
@@ -62,7 +56,7 @@ for i in range(2):
         left_sub_axes.append(ax)
     left_axes.append(left_sub_axes)
 
-# Create subplots for second 2x3 grid  
+# create subplots for second 2x3 grid  
 right_axes = []
 for i in range(2):
     sub_axes = []
@@ -80,7 +74,7 @@ for metric in ['LM prediction', 'Induction head']:
             ax = left_axes
             for i, order in enumerate(markov_orders):
                 order='markov2' if order==2 else 'markov3'
-                #args.threshold=0.9 if order==2 else 0.7
+                
                 files = os.listdir(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
                 exp_args = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/args.pt', weights_only=False)
                 accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)
@@ -243,9 +237,6 @@ left_axes[0][0].set_ylabel('2nd order')
 left_axes[1][0].set_ylabel('3nd order')
 h, l = ax[-1][-1].get_legend_handles_labels()
 fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
-# fig.supxlabel('Repetitions')
-# fig.supylabel('Accuracy %', x=-0.025)
-# title = 'Induction heads' if args.lm_head==0 else 'LM prediction'
-# fig.suptitle(f'{title}',y=1.025)
+
 plt.savefig(f'figures/ablation={args.non_random_ablation}_whole.png', bbox_inches='tight')
 plt.show()

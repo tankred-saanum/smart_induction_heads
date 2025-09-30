@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -51,8 +50,7 @@ for i, order in enumerate(markov_orders):
         ax[i, 0].plot(accs*100, label=model_name)
         ax[i, 0].set_ylim([0., 100])
 ax[0, 0].set_title('LM Head')
-#ax[0, 0].set_ylabel('Accuracy %')
-        
+     
         
 
 
@@ -86,7 +84,7 @@ for i, order in enumerate(markov_orders):
             _, max_idx = accs.mean(dim=-1).topk(5)
             accs = accs[max_idx].mean(dim=0)
         ax[i, 1].plot(accs*100, label=model_str)
-#ax[1, 0].set_ylabel('Accuracy %')
+
 ax[0, 1].set_title('Induction Heads')
 
 
@@ -125,7 +123,7 @@ for i, order in enumerate(markov_orders):
             _, max_idx = accs.mean(dim=-1).topk(5)
             accs = accs[max_idx].mean(dim=0)
         ax[i, 2].plot(accs*100, label=model_str)
-#ax[1, 0].set_ylabel('Accuracy %')
+
 ax[0, 2].set_title('Generic\n ICL heads')
 
 

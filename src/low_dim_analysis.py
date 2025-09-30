@@ -63,11 +63,11 @@ def get_config():
 args = get_config()
 
 device='mps'
-model = LanguageModel(args.model_name, device_map="auto")#AutoModelForCausalLM.from_pretrained(args.model_name, device_map="auto", torch_dtype=torch.bfloat16)
-tokenizer = model.tokenizer#AutoTokenizer.from_pretrained(args.model_name, device_map="auto")
+model = LanguageModel(args.model_name, device_map="auto")
+tokenizer = model.tokenizer
 config = PretrainedConfig.from_pretrained(args.model_name)
 vocab_size = config.vocab_size
-n_heads = config.num_attention_heads # number of heads in the models, should get info directly from config
+n_heads = config.num_attention_heads
 
 attn_heads = defaultdict(list)
 all_chunk_ids =[]
@@ -80,18 +80,10 @@ for layer in range(config.num_hidden_layers):
 
 
 def unique_second_order_markov_sequence(tokens, args, return_perms=False):
-    """
-    Generates a sequence of tokens based on a second-order Markov structure.
 
-    Returns:
-        all_tokens (Tensor): The concatenated sequence of all tokens.
-        chunk_id (Tensor): A matrix indicating which tokens belong to the same original chunk.
-        permuted_sequence (Tensor): The sequence of indices of the permutations used.
-        chunked_sequence (Tensor): The sequence of permutations (chunks) as they appear.
-    """
     perms = []
     used_perms_indices = set()
-    # Generate unique permutations of the input tokens
+    
     while len(perms) < args.n_permute:
         perm_idx = torch.randperm(args.chunk_size)
         perm_idx_tuple = tuple(perm_idx.tolist())
@@ -99,7 +91,7 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
             used_perms_indices.add(perm_idx_tuple)
             perms.append(tokens[perm_idx])
         
-    # Create a random sequence of these unique permutations
+    
     ordered_sequence = torch.arange(args.n_reps * args.n_permute) % args.n_permute
     permuted_sequence = ordered_sequence[torch.randperm(args.n_reps * args.n_permute)]
     
@@ -107,13 +99,12 @@ def unique_second_order_markov_sequence(tokens, args, return_perms=False):
     for seq_id in permuted_sequence:
         chunked_sequence_list.append(perms[seq_id])
 
-    # Stack the list of chunks into a single tensor
+    
     chunked_sequence = torch.stack(chunked_sequence_list, dim=0)
     
-    # Flatten the sequence for other uses
+    
     all_tokens = torch.cat(chunked_sequence_list, dim=0)
     
-    # Calculate chunk_id for identifying tokens from the same original permutation instance
     chunk_id = (torch.cdist(permuted_sequence.unsqueeze(-1).float(), permuted_sequence.unsqueeze(-1).float(), p=0) == 0).float().tril(diagonal=-1)
     
     if return_perms:
@@ -174,7 +165,6 @@ for layer in save_layers:
     x = x[len(x)//3:]
     z = MDS(n_components=2).fit_transform(x)
     
-    #plt.scatter(z[-250:, 0], z[-250:, 1], c=colors[-250:])
     plt.scatter(z[:, 0], z[:, 1], c=colors[-len(x):])
     plt.title(f'Layer: {layer}')
     plt.show()

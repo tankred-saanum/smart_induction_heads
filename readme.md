@@ -102,8 +102,8 @@ python plotting/plot_natural_language.py
 To find the heads we hypothesize are responsible for making induction heads learn (we call them *context matching heads*), we conduct decoding analyses. For our two experimental settings (<code>markov_order=m</code>), we can run the following script to obtain. Specifically, for a set of tokens in an $m$-order chunk $C=<x_1, ..., x_n>$., we train linear probes to decode whether the previous $m$-order chunk is identical to the $m$-order chunk composed of the tokens $C$. We get decodability scores for all heads by running the following script
 
 ```bash
-python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2 --module=heads
-python src/trace_nback2.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3 --module=heads
+python src/trace_nback.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=2 --module=heads
+python src/trace_nback.py --model_name=Qwen/Qwen2.5-1.5B --markov_order=3 --module=heads
 ```
 This script accepts a <code>module</code> argument. We can use this to decode from the residual stream and other parts of the model too.
 
@@ -140,7 +140,7 @@ In our ablation analysis, this $z$ variable is the one we target. <code>nnsight<
 ### How do context matching heads inform induction heads?
 Let's look more closely at a context matching head and an induction head that work in tandem in the model. We will ablate context matching head $13$-$4$, and observe how it affects a subsequent induction head $14$-$3$. We can do this by running the following experiment:
 
-<code>python src/inspect_ablated_inductionv2.py --total_batch_size=84 --model_name=Qwen/Qwen2.5-1.5B</code>
+<code>python src/inspect_ablated_induction.py --total_batch_size=84 --model_name=Qwen/Qwen2.5-1.5B</code>
 
 We see that the induction head largely attends to successor tokens still, but strikingly, loses its ability to attend to successor tokens from **the right contexts**
 

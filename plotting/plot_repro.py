@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -205,14 +204,14 @@ for j, metric in enumerate(['LM prediction', 'Induction head']):
     ax[0, j].set_title(metric)
     ax[-1, j].set_xlabel('Repetitions')
 
-    #ax[i, 2].set_ylim([45, 100.])
+
 
 ax[0, 0].set_ylabel('2nd order')
 
 ax[1, 0].set_ylabel('3nd order')
 h, l = ax[0, 0].get_legend_handles_labels()
 fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
-#fig.supxlabel('Repetitions')
+
 fig.supylabel('Accuracy %', x=-0.025)
 title = args.model_name.split("/")[-1]
 fig.suptitle(f'{title}',y=1.025)

@@ -43,10 +43,7 @@ def get_config():
     return args
 
 def get_chunks(A, args):
-    """
-    Pools a raw attention matrix into a chunk-by-chunk attention matrix.
-    This function is identical to the one in find_learning_heads.py.
-    """
+    
     n_chunks = args.n_permute * args.n_reps
     B = torch.zeros(A.size(0), n_chunks, n_chunks, device=A.device)
     for i in range(n_chunks):
@@ -55,15 +52,9 @@ def get_chunks(A, args):
     return B
 
 def calculate_nback_identity(all_chunk_ids_for_batch, args):
-    """
-    Calculates the raw attention accuracy for a given head,
-    replicating the logic from find_learning_heads.py.
-    Returns both the overall score and the per-chunk accuracies.
-    """
+    '''returns a binary variable which is one if the context n contexts back is the same as the current context'''
     
-    # Step 2: Calculate accuracy based on the pooled matrix
     batch_size, n_chunks = all_chunk_ids_for_batch.size(0), all_chunk_ids_for_batch.size(1)
-    #print(batch_size, all_chunk_ids_for_batch.shape)
     identities = torch.zeros(batch_size, n_chunks, device=all_chunk_ids_for_batch.device)
 
     for i in range(1, n_chunks):
@@ -93,7 +84,7 @@ def main():
     vocab_size = config.vocab_size
     head_dim = config.head_dim if hasattr(config, "head_dim") else config.hidden_size // n_heads
 
-    # --- Data Generation ---
+    # data gen
     all_batched_tokens = []
     all_chunk_ids = []
     for _ in range(args.iters):
@@ -114,7 +105,7 @@ def main():
         all_batched_tokens.append(torch.stack(batched_tokens))
         all_chunk_ids.append(torch.stack(chunk_ids))
 
-    # --- Identify Targets ---
+    # create targets
     if args.module == 'heads':
         targets = []
         for layer in range(config.num_hidden_layers):
@@ -125,12 +116,12 @@ def main():
         targets = list(range(config.num_hidden_layers))
         print(f"Starting analysis for all {len(targets)} layers for module '{args.module}'.")
 
-    # --- Feature and Label Extraction (Process in batches) ---
+    
     head_activities = {target: [] for target in targets}
     head_labels = {target: [] for target in targets}
 
     
-    # Process each batch separately to avoid memory issues
+    # get features (batch wise)
     for batch_idx in range(args.iters):
         print(f"Processing batch {batch_idx + 1}/{args.iters}...")
         
@@ -140,7 +131,7 @@ def main():
         saved_activations = {}
         with torch.no_grad():
             with model.trace(batch_tokens, scan=False):
-                # Pre-calculate which layers we need to save activations from
+                # get which layers we need to save activations from
                 unique_layers = sorted(list(set(t[0] if isinstance(t, tuple) else t for t in targets)))
 
                 for layer in unique_layers:
@@ -154,7 +145,7 @@ def main():
                         saved_activations[layer] = model.model.layers[layer].output[0].save()
                 
                 
-        # Update chunk_size for third-order Markov sequences
+        # update chunk_size for third-order sequences
         current_chunk_size = args.chunk_size * args.n_permute_primitive if args.markov_order == 3 else args.chunk_size
         labels = calculate_nback_identity(all_chunk_ids_for_batch=batch_chunk_ids, args=args)
         labels = labels[:, 1:]
@@ -163,7 +154,7 @@ def main():
             if args.module == 'heads':
                 layer, head = target
                 
-                # Process activities
+                
                 o_proj_in_tensor = saved_activations[layer].value
                 activity = rearrange(o_proj_in_tensor, 'b s (h d) -> b s h d', h=n_heads, d=head_dim)[:, :, head, :]
                 
@@ -171,30 +162,29 @@ def main():
                 layer = target
                 activity = saved_activations[layer].value
 
-            # --- POOLING AND LABEL GENERATION ---
-            # Pool the activations to match the chunk-level labels
+            
+            # pool the activations to match the chunk-level labels
             n_chunks = args.n_permute * args.n_reps
             activity = activity.view(activity.size(0), n_chunks, current_chunk_size, -1).mean(dim=2)
             activity = activity[:, 1:]
             activity_for_classification = activity.flatten(0, 1)
 
             
-            # Store the batch results
+            
             head_activities[target].append(activity_for_classification.float().cpu())
             head_labels[target].append(labels.float().cpu())
         
-        # Clear GPU memory after each batch
+        
         del saved_activations, batch_tokens, batch_chunk_ids
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-    # Concatenate all batch results
-    print("Concatenating batch results...")
+    
     for target in targets:
         head_activities[target] = torch.cat(head_activities[target], dim=0).numpy()
         head_labels[target] = torch.cat(head_labels[target], dim=0).numpy()
 
-    # --- Classification ---
+    # do classification
     results = defaultdict(list)
     if args.module=='heads':
         scores = torch.zeros(model.config.num_hidden_layers, model.config.num_attention_heads)
@@ -211,7 +201,7 @@ def main():
         X = head_activities[target] # (n_valid_chunks_total, activity_dim)
         y = head_labels[target]     # (n_valid_chunks_total,)
 
-        # Use standard train-test split on the chunk-level data
+        # set up train-test split on the chunk-level data
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=args.test_size, random_state=args.seed, stratify=y
         )

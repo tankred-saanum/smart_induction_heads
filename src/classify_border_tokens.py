@@ -1,7 +1,6 @@
 import warnings
 from argparse import ArgumentParser
 from pathlib import Path
-
 import nnsight
 import numpy as np
 import torch

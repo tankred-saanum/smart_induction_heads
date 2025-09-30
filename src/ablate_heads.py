@@ -1,18 +1,12 @@
 import sys
-
 import torch
-
 sys.path.insert(0, "..")
-
-
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-
 import numpy as np
 from nnsight import LanguageModel
 from transformers import PretrainedConfig
-
 from utils import (
     create_LH_dict,
     create_random_dict,
@@ -164,9 +158,7 @@ for iter in range(args.iters):
             address = f'{layer}-{head}'
             attn_heads[address].append(output['attentions'][layer][:, head])
         
-    #for head in heads:
 
-        
     # compute model accuracy
     logits = output['logits']
     
@@ -181,7 +173,6 @@ accuracies = torch.cat(accuracies, dim=0).cpu().float()
 save_dir = Path(f'data/ablated_learning_scores/{args.ablation_style}_threshold={args.threshold}/{order}/{args.model_name.split("/")[-1]}')
 save_dir.mkdir(parents=True, exist_ok=True)
 learning_scores = torch.zeros(config.num_hidden_layers, config.num_attention_heads)
-#induction_layers = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}_{args.threshold}.pt')
 induction_scores = torch.load(f'data/induction_scores/{args.model_name.split("/")[-1]}.pt')
 orig_learning_scores = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/learning_scores.pt')
 

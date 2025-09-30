@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -24,7 +23,6 @@ def get_config():
 
 
 args = get_config()
-#head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
 fig, ax = plt.subplots(2, 2, sharey=True, sharex=True)

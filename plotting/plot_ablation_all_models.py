@@ -1,6 +1,5 @@
 import os
 from argparse import ArgumentParser
-
 import torch
 from matplotlib import pyplot as plt
 
@@ -21,7 +20,6 @@ def get_config():
 
 
 args = get_config()
-#head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
 models = ['Qwen/Qwen2.5-0.5B', 'Qwen/Qwen2.5-1.5B', 'Qwen/Qwen2.5-3B']
@@ -37,7 +35,6 @@ for j, model_name in enumerate(models):
     args.model_name = model_name
     for i, order in enumerate(markov_orders):
         order='markov2' if order==2 else 'markov3'
-        #args.threshold=0.9 if order==2 else 0.7
         files = os.listdir(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}')
         exp_args = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/args.pt', weights_only=False)
         accs = torch.load(f'data/learning_scores/{order}/{args.model_name.split("/")[-1]}/model_accs.pt', weights_only=False)

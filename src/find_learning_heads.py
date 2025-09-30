@@ -1,11 +1,9 @@
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
-
 import numpy as np
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PretrainedConfig
-
 from utils import (
     unique_second_order_markov_sequence,
     unique_third_order_markov_sequence,
@@ -100,7 +98,6 @@ for iter in range(args.iters):
             address = f'{layer}-{head}'
             attn_heads[address].append(output['attentions'][layer][:, head])
         
-    #for head in heads:
 
         
     # compute model accuracy
@@ -139,8 +136,7 @@ for layer in list(layer_dict.keys()):
             row_model = pooled[:, i, :i]
             most_attn_idx = row_model.argmax(dim=1)
             score = row_ideal[torch.arange(args.total_batch_size), most_attn_idx]
-            #print(score.shape, 'score!')
-            
+
             head_accs[:, i] = score
             
         learning_score = head_accs.mean(dim=0)[-10:].mean()

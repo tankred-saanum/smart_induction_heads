@@ -27,7 +27,7 @@ def main(
     save_dir.mkdir(parents=True, exist_ok=True)
     
 
-    # model stuff
+    # model
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map="mps", attn_implementation="eager")
 
     # generate [<bos>, sequence, sequence]
