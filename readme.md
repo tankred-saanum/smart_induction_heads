@@ -86,6 +86,10 @@ We see that not only does the LLM learn to solve the task, but the top 5 learnin
 
 In natural language, there are many situations where simply learning bigram statistics is not sufficient to predict what comes next. We see below that learning induction heads can integrate contextual cues to make good predictions. This is not possible for 'static' induction heads that do not integrate such cues.
 
+```bash
+python plotting/plot_natural_language.py
+```
+
 ![alt text](figures/language_example.png "Title")
 
 ## Decoding the latent context
