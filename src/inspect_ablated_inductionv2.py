@@ -4,7 +4,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
 import numpy as np
 import sys
 from nnsight import LanguageModel
-sys.path.insert(0, '/Users/tankredsaanum/Documents/smart_induction_heads')
+sys.path.insert(0, "..")
+
 
 from torch.nn import functional as F
 from argparse import ArgumentParser
@@ -12,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 from src.utils import first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence
 import matplotlib as mpl
-from src.utils import create_LH_dict, get_best_and_worst
+from utils import create_LH_dict, get_best_and_worst
 mpl.rcParams['mathtext.fontset'] = 'cm'
 from matplotlib.lines import Line2D
 

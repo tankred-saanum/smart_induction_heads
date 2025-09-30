@@ -1,6 +1,7 @@
 import torch
 import sys
-sys.path.insert(0, '/Users/tankredsaanum/Documents/smart_induction_heads')
+sys.path.insert(0, "..")
+
 
 from matplotlib import pyplot as plt
 from transformers import AutoTokenizer, AutoModelForCausalLM, PretrainedConfig
@@ -12,10 +13,7 @@ import nnsight
 from nnsight import LanguageModel
 from pathlib import Path
 from collections import OrderedDict
-from importlib import reload
-import src.utils
-reload(src.utils)
-from src.utils import get_best_and_worst, first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, create_random_dict
+from utils import get_best_and_worst, first_order_markov_sequence, second_order_markov_sequence, third_order_markov_sequence, unique_second_order_markov_sequence, unique_third_order_markov_sequence, create_LH_dict, create_random_dict
 
 def get_chunks(A):
     B = torch.zeros(args.total_batch_size, args.n_permute*args.n_reps, args.n_permute*args.n_reps)
