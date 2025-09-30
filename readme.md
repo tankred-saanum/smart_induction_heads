@@ -118,8 +118,12 @@ Finally, let's see if the induction heads and context matching heads are causall
 
 $$a_{i, i} \propto exp{\left(\dfrac{q_i  k_j}{\sqrt{d}} \right)}$$
 
+
 Now let's define the output of the attention operation of this head for token $x_i$, namely $z_i$, as the sum of all tokens' value vector $v_j$ scaled by how much $x_i$ attends to token $x_j$ in head $h$:
+
+
 $$z_{i} = \sum_j^{n}a_{i, j} v_j$$
+
 
 In our ablation analysis, this $z$ variable is the one we target. <code>nnsight</code> allows us to do pretty much what we want with this variable before it is passed to the <code>o_proj</code> linear layer that mixes the attention heads' outputs back into the residual stream. To ablate an attention head, we simply set the corresponding attention represention $z$ to a vector of zeros, $z=\boldsymbol{0}$. 
 
