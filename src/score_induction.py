@@ -7,7 +7,6 @@ from transformers import AutoModelForCausalLM
 
 _ = torch.set_grad_enabled(False)
 g = torch.manual_seed(1234)
-#torch.use_deterministic_algorithms(True)
 
 
 

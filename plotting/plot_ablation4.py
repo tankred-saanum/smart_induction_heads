@@ -31,8 +31,8 @@ fig, ax = plt.subplots(2, len(models), sharey=True, sharex=True)
 
 exceptions = ['learning_scores.pt', 'model_accs.pt', 'args.pt']
 colors = ['#8a2f08', '#2d7acc', '#eba134']
-non_random_ablation_label = 'Induction heads lesioned' if args.non_random_ablation=='induction' else 'Context matching heads lesioned'
-random_ablation_label = 'Random heads lesioned'
+non_random_ablation_label = 'Induction heads ablated' if args.non_random_ablation=='induction' else 'Context matching heads ablated'
+random_ablation_label = 'Random heads ablated'
 for j, model_name in enumerate(models):
     args.model_name = model_name
     for i, order in enumerate(markov_orders):
@@ -55,7 +55,7 @@ for j, model_name in enumerate(models):
             mask[-1] = False
             accs = accs[:, mask]
             accs = accs.mean(dim=1)
-        ax[i, j].plot(accs*100, label='No lesion', color=colors[0])
+        ax[i, j].plot(accs*100, label='No ablation', color=colors[0])
         
         
         

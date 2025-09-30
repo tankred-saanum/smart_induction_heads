@@ -27,7 +27,7 @@ args = get_config()
 #head_type = 'One-back' if args.ablation_style=='one_back' else 'Random'
 markov_orders= [2, 3]
 
-fig, ax = plt.subplots(2, 3, sharey=True, sharex=True)
+fig, ax = plt.subplots(2, 3, figsize=(12, 5), sharey=False, sharex=False)
 
 
 
@@ -195,21 +195,26 @@ for j, metric in enumerate(['LM prediction', 'Induction head']):
             ax[i, j].set_ylim([0., 100])
             decoding_accs = torch.load(f'data/one_back_scores/{order}/{args.model_name.split("/")[-1]}/{args.module}/decoding_accuracies.pt', weights_only=False)
             scores = decoding_accs.max(dim=-1)[0]*100
-            ax[i, 2].plot(scores, color=colors[j], label=f'Order {order}')
-                    
+            ax[i, 2].plot(scores, color='k', label=f'Order {order}')
+            ax[i, 2].set_ylim([45, 100])
+            if i==0:
+                ax[i, 2].set_title('Context decodability')
+            else:
+                ax[i, 2].set_xlabel('Layer')
             
     ax[0, j].set_title(metric)
+    ax[-1, j].set_xlabel('Repetitions')
 
     #ax[i, 2].set_ylim([45, 100.])
 
 ax[0, 0].set_ylabel('2nd order')
 
 ax[1, 0].set_ylabel('3nd order')
-h, l = ax[-1, -1].get_legend_handles_labels()
-fig.legend(h, l, ncols=2, loc='upper center', bbox_to_anchor=(0.5, 0.01))
-fig.supxlabel('Repetitions')
+h, l = ax[0, 0].get_legend_handles_labels()
+fig.legend(h, l, ncols=3, loc='upper center', bbox_to_anchor=(0.5, 0.01))
+#fig.supxlabel('Repetitions')
 fig.supylabel('Accuracy %', x=-0.025)
-title = {args.model_name.split("/")[-1]}
+title = args.model_name.split("/")[-1]
 fig.suptitle(f'{title}',y=1.025)
-plt.savefig(f'figures/ablation={args.non_random_ablation}_{title}_alt_models.png', bbox_inches='tight')
+plt.savefig(f'figures/reproducability_{args.non_random_ablation}_{title}.png', bbox_inches='tight')
 plt.show()
