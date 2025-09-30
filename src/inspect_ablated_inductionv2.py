@@ -377,59 +377,6 @@ for condition in ['normal', 'ablate']:
                 columnspacing=1,     # Space between columns
                 handlelength=1.75,      # Length of legend lines
                 handletextpad=0.3)
-                #ax[2].set_aspect('equal', adjustable='box')
 
-                # Create the first legend for colors
-                #color_legend = ax[2].legend(handles=color_elements, loc='upper left', title='Conditions')
-
-                # Create the second legend for linestyles
-                #linestyle_legend = ax[2].legend(handles=linestyle_elements, loc='upper right', title='Types')
-
-#plt.tight_layout()
 plt.savefig('figures/induction_heads_visualization_order=2_ablated.png', bbox_inches='tight')
 plt.show()
-
-
-
-if args.markov_order==3:
-    grid_interval = args.chunk_size*args.n_permute_primitive
-    #f, ax = plt.subplots(2, 2, figsize=(10, 8))
-    lwd=0.75
-    id_to_letter = {i: chr(945 + i) for i in range(args.n_permute)}
-    greek_letters = ['\u03A9', '\u03C8', '\u03C6'] # Ω, ψ, φ
-    id_to_letter = {i: greek_letters[i] for i in range(args.n_permute)}
-    id_to_alphabet = {t.item(): chr(945 + i) for i, t in enumerate(batched_tokens.unique())}
-    greek_labels = [f"${id_to_letter[p.item()]}$" for p in perm_id]
-    #[f"${id_to_letter[id]}$" for id in chunk_ids]
-    alpabet_labels = [id_to_alphabet[token.item()] for token in batched_tokens[0]]
-    fs=15
-    for i, l in enumerate(ldict.keys()):
-        for h in ldict[l]:
-            attn = attn_heads[f'{l}-{h}'][0][0].cpu().float()
-            #pooled = get_chunks(attn.unsqueeze(0)).squeeze(0)
-            pooled = get_chunks_3rd_order_uniform(attn.unsqueeze(0)).squeeze(0)
-            #attn = get_chunks(attn.unsqueeze(0)).squeeze(0)
-            if i ==0:
-                ax[0, i].set_title(f'Head {l} - {h}\n\nOff-diagonal head')
-            else:
-                ax[0, i].set_title(f'Head {l} - {h}\n\nN-tokens-back\nhead')
-            ax[0, i].imshow(pooled, cmap='copper')
-            ax[0, i].set_xticks(torch.arange(len(greek_labels)))
-            ax[0, i].set_yticks(torch.arange(len(greek_labels)))
-            ax[0, i].set_xticklabels(greek_labels, size=fs)
-            ax[0, i].set_yticklabels(greek_labels, size=fs)
-            
-            ax[1, i].imshow(attn, cmap='copper')
-            ax[1, i].set_xticks(torch.arange(0, attn.size(0), args.chunk_size*args.n_permute_primitive)+args.chunk_size+1)
-            ax[1, i].set_yticks(torch.arange(0, attn.size(0), args.chunk_size*args.n_permute_primitive)+args.chunk_size+1)
-            ax[1, i].set_xticklabels(greek_labels, size=fs)
-            ax[1, i].set_yticklabels(greek_labels, size=fs)
-            
-            for j in range(grid_interval, attn.shape[1], grid_interval):
-                ax[1, i].axvline(x=j-0.5, color='white', linewidth=lwd)
-
-            for j in range(grid_interval, attn.shape[0], grid_interval):
-                ax[1, i].axhline(y=j-0.5, color='white', linewidth=lwd)
-
-    plt.savefig('figures/one_back_heads_visualization_order=3.png', bbox_inches='tight')
-    plt.show()
