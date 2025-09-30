@@ -263,7 +263,7 @@ if args.markov_order==2:
             for j in range(grid_interval, attn.shape[0], grid_interval):
                 ax[1, i].axhline(y=j-0.5, color='white', linewidth=lwd)
 
-    #plt.savefig('figures/one_back_heads_visualization_order=2.png', bbox_inches='tight')
+    plt.savefig('figures/one_back_heads_visualization_order=2.png', bbox_inches='tight')
     plt.show()
 
 
